@@ -1,0 +1,245 @@
+---
+title: 'Project 2: Modeling, Testing, and Predicting'
+author: Charlotte Griffit; gac2637 
+date: 5/7/21
+output:
+  html_document:
+    toc: yes
+    toc_float:
+      collapsed: no
+      smooth_scroll: yes
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+hook_output = knit_hooks$get('output')
+knit_hooks$set(output = function(x, options) {
+  # this hook is used only when the linewidth option is not NULL
+  if (!is.null(n <- options$linewidth)) {
+    x = knitr:::split_lines(x)
+    # any lines wider than n should be wrapped
+    if (any(nchar(x) > n)) x = strwrap(x, width = n)
+    x = paste(x, collapse = '\n')
+  }
+  hook_output(x, options)
+})
+
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE,fig.align="center",warning=FALSE,message=FALSE,fig.width=8, fig.height=5, linewidth=60)
+options(tibble.width = 100,width = 100)
+library(tidyverse)
+```
+
+```{r}
+library(ggplot2)
+library(lmtest)
+library(plotROC)
+library(glmnet)
+library(sandwich)
+library(dplyr)
+library(tidyverse)
+```
+
+- **0. (5 pts)** Introduce your dataset and each of your variables (or just your main variables if you have lots) in a paragraph. What are they measuring? How many observations?
+
+```{r}
+library("readxl")
+df <- read_excel("sleepdata.xlsx")
+head(df)
+names(df) <- c("startTime", "endTime", "quality", "minutes", "hours","adequate","heartRate", "steps")
+
+class_diag<-function(probs,truth){
+  
+  tab<-table(factor(probs>.5,levels=c("FALSE","TRUE")),truth)
+  acc=sum(diag(tab))/sum(tab)
+  sens=tab[2,2]/colSums(tab)[2]
+  spec=tab[1,1]/colSums(tab)[1]
+  ppv=tab[2,2]/rowSums(tab)[2]
+
+  if(is.numeric(truth)==FALSE & is.logical(truth)==FALSE) truth<-as.numeric(truth)-1
+  
+  #CALCULATE EXACT AUC
+  ord<-order(probs, decreasing=TRUE)
+  probs <- probs[ord]; truth <- truth[ord]
+  
+  TPR=cumsum(truth)/max(1,sum(truth)) 
+  FPR=cumsum(!truth)/max(1,sum(!truth))
+  
+  dup<-c(probs[-1]>=probs[-length(probs)], FALSE)
+  TPR<-c(0,TPR[!dup],1); FPR<-c(0,FPR[!dup],1)
+  
+  n <- length(TPR)
+  auc<- sum( ((TPR[-1]+TPR[-n])/2) * (FPR[-1]-FPR[-n]) )
+
+  data.frame(acc,sens,spec,ppv,auc)
+}
+```
+
+*Sleep Cycle is an intelligent alarm clock designed to gently wake you up while you’re in your lightest sleep phase.  It's smart technology analyzes sleep patterns while detecting snoring, sleep talking, coughing and other sounds providing detailed sleep statistics, daily sleep graphs and can sync with other phone apps to track activity levels.  I have exported my own data from the app for the purposes of this project to analyze my sleep patterns over the last few months.  Variables in this dataset include sleep (start) and wake (end) times, sleep duration in hours and minutes as well as sleep quality (%), which has been calculated by variables some of which we do not have access to including amount of time spent in bed, amount of time spent in deep sleep, the frequency of motion and intensity for each movement and the amount of times where the app registered you as fully awake.  Additional variables included in this dataset include if sleep duration was over 7hrs (>7hr=TRUE; <7hrs=FALSE), heart rate taken each morning (heartRate), and daily step counted by the health app in my iPhone (activity). There are 40 total observations in this dataset*
+
+- **1. (15 pts)** Perform a MANOVA testing whether any of your numeric variables (or a subset of them, if including them all is unreasonable or doesn't make sense) show a mean difference across levels of one of your categorical variables (3). If they do, perform univariate ANOVAs to find response(s) showing a mean difference across groups (3), and perform post-hoc t tests to find which groups differ (3). Discuss the number of tests you have performed, calculate the probability of at least one type I error (if unadjusted), and adjust the significance level accordingly (bonferroni correction) before discussing significant differences (3). Briefly discuss some of the MANOVA assumptions and whether or not they are likely to have been met here (no need for anything too in-depth) (2).
+
+```{r}
+library(rstatix)
+group<-df$adequate
+DVs <- df %>% select(quality, heartRate, steps)
+
+man1 <- manova(cbind(quality, heartRate, steps) ~ adequate, data = df)
+summary(man1)
+
+df%>%group_by(adequate)%>%summarize(mean(quality),mean(minutes),mean(heartRate),mean(steps))
+
+0.05/1
+```
+
+*Assumptions of both normality and homogeneity of covariance were violated.  A one-way MANOVA was conducted to determine the effect of the receiving adequate sleep (>7hours) on 3 dependent variables: quality of sleep (%), waking heart rate (bpm), and daily activity (steps).  No significant differences were found of any of the dependent variables on sleep duration (>7hrs=TRUE; <7hrs=FALSE)  F(3, 36) = 0.65 p < 0.5836.  Therefore, univariate ANOVA to determine significance for each dependent variable was not appropriate. Overall Type I error rate is kept at alpha = 0.05.*
+
+- **2. (10 pts)** Perform some kind of randomization test on your data (that makes sense). The statistic can be anything you want (mean difference, correlation, F-statistic/ANOVA, chi-squared), etc. State null and alternative hypotheses, perform the test, and interpret the results (7). Create a plot visualizing the null distribution and the test statistic (3).
+
+```{r}
+adequate<-c(51,57,34,73,51,63,32,32,70,46,48,69,41,28,42,43,29,67,48,35,42,38,57,54,38,65,43)
+insufficient<-c(60,60,67,44,40,48,69,41,28,42,43,29,67,48,35,42,38,57,54,38,65,43)
+
+data<-data.frame(condition=c(rep("adequate",27),rep("insufficient",22)),quality=c(adequate,insufficient)) 
+head(data)
+
+data%>%group_by(condition)%>%
+  summarize(means=mean(quality))%>%summarize(`mean_diff`=diff(means)) 
+
+rand_dist<-vector() 
+
+for(i in 1:5000){
+new<-data.frame(quality=sample(data$quality),condition=data$condition) 
+rand_dist[i]<-mean(new[new$condition=="adequate",]$quality)-   
+              mean(new[new$condition=="insufficient",]$quality)} 
+
+{hist(rand_dist); abline(v = c(-0.0909, 0.0909),col="red")}
+
+mean(rand_dist>0.09 | rand_dist< -0.09)
+
+```
+*We want to know if there is an association between having adequate sleep duration (>7hrs) and the quality sleep, so we compute a test statistic.  Because the variables are categorical (sleep duration >7hr; TRUE vs. FALSE) vs. numeric (sleep score, %) we will compute mean difference.   The null hypothesis is that sleep quality is the same for nights when I got >7hours sleep vs. <7 hrs.  The alternative hypothesis is that sleep quality is different for night when I got >7hrs of sleep vs. <7hr.  Independent samples t-test for comparison; p-value is not significant (p=0.98), sleep quality is not significantly different between nights of more or less than 7hours or sleep*
+
+- **3. (40 pts)** Build a linear regression model predicting one of your response variables from at least 2 other variables, including their interaction. Mean-center any numeric variables involved in the interaction.
+
+```{r}
+#center numeric
+df$steps_c <- df$steps - mean(df$steps)
+df$heartRate_c <- df$heartRate - mean(df$heartRate)
+
+#linear regression
+fit<-lm(quality~ adequate + heartRate_c + adequate*heartRate_c, data=df)
+summary(fit)
+
+#plot regression
+df%>%ggplot(aes(quality,heartRate, color=adequate))+geom_point()+geom_smooth(method = 'lm',se=F)
+
+#assumptions
+resids<-fit$residuals; fitvals<-fit$fitted.value
+ggplot()+geom_point(aes(fitvals,resids))+geom_hline(yintercept=0, col="red")
+
+bptest(fit)
+
+ks.test(resids, "pnorm", sd=sd(resids)) #normality 
+
+coeftest(fit, vcov = vcovHC(fit,type="HC1"))
+
+```
+
+*Intercept: 46.08 is mean/predicted quality of sleep for nights I slept more than 7 hours.  For every 1 unit increase in waking heart rate, quality of sleep decreased by 1.34%.  The slope for heart rate on nights I slept 7 or more hours is 0.582 less than for nights I slept less than 7 hours.  However, none of these coefficients were significant predictors of sleep quality. After recomputing the regression with robust standard errors we see the conclusions remain similar with no significance found between the predictors and outcome.*
+
+- **4. (5 pts)** Rerun same regression model (with the interaction), but this time compute bootstrapped standard errors (either by resampling observations or residuals). Discuss any changes you observe in SEs and p-values using these SEs compared to the original SEs and the robust SEs)
+
+```{r}
+lm(quality~ adequate + heartRate_c + adequate*heartRate_c, data=df) %>% summary
+
+fit<-lm(quality~ adequate + heartRate_c + adequate*heartRate_c, data=df)
+resids<-fit$residuals
+fitted<-fit$fitted.values
+resid_resamp<-replicate(5000,{
+new_resids<-sample(resids,replace=TRUE)
+newdat<-df
+newdat$new_y<-fitted+new_resids
+fit<-lm(new_y ~ adequate + heartRate_c + adequate*heartRate_c, data = newdat)
+coef(fit)
+})
+
+resid_resamp%>%t%>%as.data.frame%>%summarize_all(sd)
+
+resid_resamp%>%t%>%as.data.frame%>%gather%>%group_by(key)%>%
+summarize(lower=quantile(value,.025), upper=quantile(value,.975))
+```
+*Bootstrapped SEs were computed by residuals.  Overall, all SEs decreased slightly from the original regression model.  However, p-values remained non-significant.*
+
+- **5. (30 pts)** Fit a logistic regression model predicting a binary variable (if you don't have one, make/get one) from at least two explanatory variables (interaction not necessary).
+
+```{r}
+logfit<- glm(adequate ~ steps + heartRate, data=df, family="binomial")
+coeftest(logfit)
+exp(coeftest(logfit))
+
+prob<-predict(logfit,type="response") 
+table(predict=as.numeric(prob>.5),truth=df$adequate)%>%addmargins
+
+class_diag(prob,df$adequate)
+
+ggplot(df, aes(steps,heartRate))+geom_jitter(aes(color=adequate),alpha=.5,size=3)+
+  geom_rug(aes(color=adequate),sides="right")+geom_hline(yintercept=.5)
+```
+
+```{r}
+library(plotROC)
+
+ROCplot<-ggplot(df)+geom_roc(aes(d=adequate,m=prob), n.cuts=0)+
+geom_segment(aes(x=0,xend=1,y=0,yend=1),lty=2)
+ROCplot
+
+calc_auc(ROCplot)
+```
+*The logistic regression model shows when controlling for the waking heart rate the effect of steps taken during the day does not have a significant effect on whether or I was getting adequate sleep. This model has high sensitivity (0.96), good accuracy (0.7), good precision (0.7), but very poor specificity(0.153).  Overall the model does a poor job of predicting (auc=0.626).  The ROC curve reported a fair AUC 0.73*`
+
+- **6. (25 pts)** Perform a logistic regression predicting the same binary response variable from *ALL* of the rest of your variables (the more, the better!) 
+
+```{r}
+lassodat<- df %>% select(quality, minutes, adequate, heartRate, steps)
+logfit2<- glm(adequate~., data = lassodat, family="binomial")
+summary(logfit2)
+
+lassodat$y<-ifelse(lassodat$adequate==1,1,0)
+lassodat$prob<-predict(logfit2,type="response") 
+table(predict=as.numeric(lassodat$prob>.5),truth=lassodat$y)%>%addmargins
+
+class_diag(prob,lassodat$y)
+
+set.seed(1234)
+k=10
+
+data<-lassodat[sample(nrow(lassodat)),] 
+folds<-cut(seq(1:nrow(lassodat)),breaks=k,labels=F) 
+
+diags<-NULL
+for(i in 1:k){
+  train<-data[folds!=i,] 
+  test<-data[folds==i,]
+  truth<-test$y
+  fit<-glm(adequate~., data = lassodat, family="binomial")
+  probs<-predict(logfit2,newdata = test,type="response")
+  diags<-rbind(diags,class_diag(prob,lassodat$y))
+}
+
+
+summarize_all(diags,mean)
+
+y<-as.matrix(lassodat$adequate) 
+x<-model.matrix(adequate~., data = lassodat)[,-1] 
+head(x)
+
+x<- scale(x) #good idea to standardize 
+
+cv <- cv.glmnet(x,y, family = "binomial") 
+
+cv<-cv.glmnet(x,y,family="binomial")
+lasso<-glmnet(x,y,family="binomial",lambda=cv$lambda.1se)
+coef(lasso)
+```
+*This model has high sensitivity (0.96), good accuracy (0.7), good precision (0.7), but very poor specificity(0.153).  Overall the model does a poor job of predicting (auc=0.626).  No variables were retained when performing a lasso on the model.  Therefore it is not appropriate to perform any additional lasso on the variables selected from the first lasso- no further analysis necessary.*
+

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Charlotte Griffith MS, RDN</title>
+    <link>/</link>
+    <description>Recent content on Charlotte Griffith MS, RDN</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-US</language>
+    <lastBuildDate>Wed, 05 May 2021 00:00:00 +0000</lastBuildDate><atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Python/Reticulate</title>
+      <link>/post/2021/05/05/new/</link>
+      <pubDate>Wed, 05 May 2021 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2021/05/05/new/</guid>
+      <description> hw = &amp;quot;hello world&amp;quot; hw[0:11] ## &amp;#39;hello world&amp;#39; library(reticulate) hi&amp;lt;-&amp;quot;Hello&amp;quot; hi=&amp;quot;world&amp;quot; print(r.hi,hi)  ## Hello world cat(c(hi,py$hi)) ## Hello world </description>
+    </item>
+    
+    <item>
+      <title>Project 1: Exploratory Data Analysis</title>
+      <link>/project/project1/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/project/project1/</guid>
+      <description>## paste this chunk into the ```{r setup} chunk at the top of ## your project 1 .Rmd file knitr::opts_chunk$set(echo = TRUE, eval = TRUE, fig.align = &amp;quot;center&amp;quot;, warning = F, message = F, tidy = TRUE, tidy.opts = list(width.cutoff = 60), R.options = list(max.print = 100)) Data Wrangling and Data Exploration 0. Introduction  Write a narrative introductory paragraph or two describing the datasets you have chosen, the variables they contain, how they were acquired, and why they are interesting to you.</description>
+    </item>
+    
+    <item>
+      <title>Project 2: Modeling, Testing, and Predicting</title>
+      <link>/project/project2/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/project/project2/</guid>
+      <description>library(ggplot2) library(lmtest) library(plotROC) library(glmnet) library(sandwich) library(dplyr) library(tidyverse)  0. (5 pts) Introduce your dataset and each of your variables (or just your main variables if you have lots) in a paragraph. What are they measuring? How many observations?  library(&amp;quot;readxl&amp;quot;) df &amp;lt;- read_excel(&amp;quot;sleepdata.xlsx&amp;quot;) head(df) ## # A tibble: 6 x 8 ## Start End `Sleep quality … minutes `Time in Bed (hrs)` `&amp;gt;7 hours` ## &amp;lt;dttm&amp;gt; &amp;lt;dttm&amp;gt; &amp;lt;dbl&amp;gt; &amp;lt;dbl&amp;gt; &amp;lt;dttm&amp;gt; &amp;lt;lgl&amp;gt; ## 1 2021-05-03 22:38:00 2021-05-04 06:16:00 51 458 1899-12-31 07:38:00 TRUE ## 2 2021-05-02 22:29:00 2021-05-03 06:35:00 57 486 1899-12-31 08:06:00 TRUE ## 3 2021-05-01 23:19:00 2021-05-02 06:25:00 34 426 1899-12-31 07:06:00 TRUE ## 4 2021-04-30 22:17:00 2021-05-01 06:27:00 73 490 1899-12-31 08:10:00 TRUE ## 5 2021-04-29 20:32:00 2021-04-30 06:45:00 51 613 1899-12-31 10:13:00 TRUE ## 6 2021-04-28 21:26:00 2021-04-29 07:16:00 63 590 1899-12-31 09:50:00 TRUE ## # … with 2 more variables: `Heart Rate` &amp;lt;dbl&amp;gt;, `Activity (steps)` &amp;lt;dbl&amp;gt; names(df) &amp;lt;- c(&amp;quot;startTime&amp;quot;, &amp;quot;endTime&amp;quot;, &amp;quot;quality&amp;quot;, &amp;quot;minutes&amp;quot;, &amp;quot;hours&amp;quot;,&amp;quot;adequate&amp;quot;,&amp;quot;heartRate&amp;quot;, &amp;quot;steps&amp;quot;) class_diag&amp;lt;-function(probs,truth){ tab&amp;lt;-table(factor(probs&amp;gt;.</description>
+    </item>
+    
+    <item>
+      <title>Projects</title>
+      <link>/projects/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/projects/</guid>
+      <description> Check out some of my coding projects below:
+ Wrangling &amp;amp; Exploratory Data Analysis
+ Modeling, Inference, Prediction
+  -- </description>
+    </item>
+    
+    <item>
+      <title>Resume</title>
+      <link>/resume/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/resume/</guid>
+      <description>    </description>
+    </item>
+    
+  </channel>
+</rss>

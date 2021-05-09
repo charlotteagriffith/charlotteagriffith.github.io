@@ -1,0 +1,45 @@
+
+
+
+<table>
+<tbody>
+<tr class="odd">
+<td>title: ‘Blog Post’</td>
+</tr>
+<tr class="even">
+<td>author: ’’</td>
+</tr>
+<tr class="odd">
+<td>date: ‘2021-05-07’</td>
+</tr>
+<tr class="even">
+<td>slug: blog-post</td>
+</tr>
+<tr class="odd">
+<td>categories: []</td>
+</tr>
+<tr class="even">
+<td>tags: []</td>
+</tr>
+<tr class="odd">
+<td>description: ’’</td>
+</tr>
+</tbody>
+</table>
+<pre class="python"><code>hw = &quot;hello world&quot;
+hw[0:11]</code></pre>
+<pre><code>## &#39;hello world&#39;</code></pre>
+<div id="reticulate-package-lets-r-and-python-play-together" class="section level3">
+<h3>Reticulate package lets R and Python play together!</h3>
+<pre class="r"><code>#R code chunk
+library(reticulate)
+
+hi&lt;-&quot;Hello&quot;</code></pre>
+<pre class="python"><code>#Python code chunk
+hi=&quot;world&quot;
+print(r.hi,hi) #access R-defined objects with r. </code></pre>
+<pre><code>## Hello world</code></pre>
+<pre class="r"><code>#R code chunk
+cat(c(hi,py$hi)) #access Python-defined objects with py$</code></pre>
+<pre><code>## Hello world</code></pre>
+</div>

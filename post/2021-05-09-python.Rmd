@@ -1,0 +1,30 @@
+---
+title: Python/Reticulate
+author: ''
+date: '2021-05-05'
+slug: new
+categories: []
+tags: []
+description: ''
+---
+
+```{python}
+hw = "hello world"
+hw[0:11]
+```
+
+```{R}
+library(reticulate)
+hi<-"Hello"
+```
+
+```{python}
+hi="world"
+print(r.hi,hi) 
+```
+
+```{R}
+cat(c(hi,py$hi))
+```
+
+

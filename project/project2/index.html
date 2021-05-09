@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Charlotte Griffith MS, RDN" />
+    
+    <link rel="shortcut icon" type="image/x-icon" href="../../img/favicon.ico">
+    <title>Project 2: Modeling, Testing, and Predicting</title>
+    <meta name="generator" content="Hugo 0.83.1" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../../css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,200bold,400old" />
+    
+    <!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+
+    
+  </head>
+
+  <body>
+    <div id="wrap">
+      
+      <nav class="navbar navbar-default">
+  <div class="container">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="../../"><i class="fa fa-home"></i></a>
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <div class="navbar-collapse collapse" id="navbar">
+      <ul class="nav navbar-nav navbar-right">
+      
+        
+        <li><a href="../../post/">BLOG</a></li>
+        
+        <li><a href="../../projects/">PROJECTS</a></li>
+        
+        <li><a href="../../resume/">RESUME</a></li>
+        
+      
+      </ul>
+    </div>
+  </div>
+</nav>
+
+      <div class="container">
+        <div class="blog-post">
+          <h3>
+            <strong><a href="../../project/project2/">Project 2: Modeling, Testing, and Predicting</a></strong>
+          </h3>
+        </div>
+ 
+<div class="blog-title">
+          <h4>
+         January 1, 0001 
+            &nbsp;&nbsp;
+            
+          </h4>
+        </div>
+
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <div class="blogpost">
+              
+
+
+<pre class="r"><code>library(ggplot2)
+library(lmtest)
+library(plotROC)
+library(glmnet)
+library(sandwich)
+library(dplyr)
+library(tidyverse)</code></pre>
+<ul>
+<li><strong>0. (5 pts)</strong> Introduce your dataset and each of your variables (or just your main variables if you have lots) in a paragraph. What are they measuring? How many observations?</li>
+</ul>
+<pre class="r"><code>library(&quot;readxl&quot;)
+df &lt;- read_excel(&quot;sleepdata.xlsx&quot;)
+head(df)</code></pre>
+<pre><code>## # A tibble: 6 x 8
+## Start End `Sleep quality … minutes `Time in Bed (hrs)`
+`&gt;7 hours`
+## &lt;dttm&gt; &lt;dttm&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dttm&gt; &lt;lgl&gt;
+## 1 2021-05-03 22:38:00 2021-05-04 06:16:00 51 458
+1899-12-31 07:38:00 TRUE
+## 2 2021-05-02 22:29:00 2021-05-03 06:35:00 57 486
+1899-12-31 08:06:00 TRUE
+## 3 2021-05-01 23:19:00 2021-05-02 06:25:00 34 426
+1899-12-31 07:06:00 TRUE
+## 4 2021-04-30 22:17:00 2021-05-01 06:27:00 73 490
+1899-12-31 08:10:00 TRUE
+## 5 2021-04-29 20:32:00 2021-04-30 06:45:00 51 613
+1899-12-31 10:13:00 TRUE
+## 6 2021-04-28 21:26:00 2021-04-29 07:16:00 63 590
+1899-12-31 09:50:00 TRUE
+## # … with 2 more variables: `Heart Rate` &lt;dbl&gt;, `Activity
+(steps)` &lt;dbl&gt;</code></pre>
+<pre class="r"><code>names(df) &lt;- c(&quot;startTime&quot;, &quot;endTime&quot;, &quot;quality&quot;, &quot;minutes&quot;, &quot;hours&quot;,&quot;adequate&quot;,&quot;heartRate&quot;, &quot;steps&quot;)
+
+class_diag&lt;-function(probs,truth){
+  
+  tab&lt;-table(factor(probs&gt;.5,levels=c(&quot;FALSE&quot;,&quot;TRUE&quot;)),truth)
+  acc=sum(diag(tab))/sum(tab)
+  sens=tab[2,2]/colSums(tab)[2]
+  spec=tab[1,1]/colSums(tab)[1]
+  ppv=tab[2,2]/rowSums(tab)[2]
+
+  if(is.numeric(truth)==FALSE &amp; is.logical(truth)==FALSE) truth&lt;-as.numeric(truth)-1
+  
+  #CALCULATE EXACT AUC
+  ord&lt;-order(probs, decreasing=TRUE)
+  probs &lt;- probs[ord]; truth &lt;- truth[ord]
+  
+  TPR=cumsum(truth)/max(1,sum(truth)) 
+  FPR=cumsum(!truth)/max(1,sum(!truth))
+  
+  dup&lt;-c(probs[-1]&gt;=probs[-length(probs)], FALSE)
+  TPR&lt;-c(0,TPR[!dup],1); FPR&lt;-c(0,FPR[!dup],1)
+  
+  n &lt;- length(TPR)
+  auc&lt;- sum( ((TPR[-1]+TPR[-n])/2) * (FPR[-1]-FPR[-n]) )
+
+  data.frame(acc,sens,spec,ppv,auc)
+}</code></pre>
+<p><em>Sleep Cycle is an intelligent alarm clock designed to gently wake you up while you’re in your lightest sleep phase. It’s smart technology analyzes sleep patterns while detecting snoring, sleep talking, coughing and other sounds providing detailed sleep statistics, daily sleep graphs and can sync with other phone apps to track activity levels. I have exported my own data from the app for the purposes of this project to analyze my sleep patterns over the last few months. Variables in this dataset include sleep (start) and wake (end) times, sleep duration in hours and minutes as well as sleep quality (%), which has been calculated by variables some of which we do not have access to including amount of time spent in bed, amount of time spent in deep sleep, the frequency of motion and intensity for each movement and the amount of times where the app registered you as fully awake. Additional variables included in this dataset include if sleep duration was over 7hrs (&gt;7hr=TRUE; &lt;7hrs=FALSE), heart rate taken each morning (heartRate), and daily step counted by the health app in my iPhone (activity). There are 40 total observations in this dataset</em></p>
+<ul>
+<li><strong>1. (15 pts)</strong> Perform a MANOVA testing whether any of your numeric variables (or a subset of them, if including them all is unreasonable or doesn’t make sense) show a mean difference across levels of one of your categorical variables (3). If they do, perform univariate ANOVAs to find response(s) showing a mean difference across groups (3), and perform post-hoc t tests to find which groups differ (3). Discuss the number of tests you have performed, calculate the probability of at least one type I error (if unadjusted), and adjust the significance level accordingly (bonferroni correction) before discussing significant differences (3). Briefly discuss some of the MANOVA assumptions and whether or not they are likely to have been met here (no need for anything too in-depth) (2).</li>
+</ul>
+<pre class="r"><code>library(rstatix)
+group&lt;-df$adequate
+DVs &lt;- df %&gt;% select(quality, heartRate, steps)
+
+man1 &lt;- manova(cbind(quality, heartRate, steps) ~ adequate, data = df)
+summary(man1)</code></pre>
+<pre><code>##           Df   Pillai approx F num Df den Df Pr(&gt;F)
+## adequate   1 0.051939  0.65741      3     36 0.5836
+## Residuals 38</code></pre>
+<pre class="r"><code>df%&gt;%group_by(adequate)%&gt;%summarize(mean(quality),mean(minutes),mean(heartRate),mean(steps))</code></pre>
+<pre><code>## # A tibble: 2 x 5
+## adequate `mean(quality)` `mean(minutes)`
+`mean(heartRate)` `mean(steps)`
+## &lt;lgl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+## 1 FALSE 45.2 360.  62.7 6217.
+## 2 TRUE 48 518.  61.7 6050.</code></pre>
+<pre class="r"><code>0.05/1</code></pre>
+<pre><code>## [1] 0.05</code></pre>
+<p><em>Assumptions of both normality and homogeneity of covariance were violated. A one-way MANOVA was conducted to determine the effect of the receiving adequate sleep (&gt;7hours) on 3 dependent variables: quality of sleep (%), waking heart rate (bpm), and daily activity (steps). No significant differences were found of any of the dependent variables on sleep duration (&gt;7hrs=TRUE; &lt;7hrs=FALSE) F(3, 36) = 0.65 p &lt; 0.5836. Therefore, univariate ANOVA to determine significance for each dependent variable was not appropriate. Overall Type I error rate is kept at alpha = 0.05.</em></p>
+<ul>
+<li><strong>2. (10 pts)</strong> Perform some kind of randomization test on your data (that makes sense). The statistic can be anything you want (mean difference, correlation, F-statistic/ANOVA, chi-squared), etc. State null and alternative hypotheses, perform the test, and interpret the results (7). Create a plot visualizing the null distribution and the test statistic (3).</li>
+</ul>
+<pre class="r"><code>adequate&lt;-c(51,57,34,73,51,63,32,32,70,46,48,69,41,28,42,43,29,67,48,35,42,38,57,54,38,65,43)
+insufficient&lt;-c(60,60,67,44,40,48,69,41,28,42,43,29,67,48,35,42,38,57,54,38,65,43)
+
+data&lt;-data.frame(condition=c(rep(&quot;adequate&quot;,27),rep(&quot;insufficient&quot;,22)),quality=c(adequate,insufficient)) 
+head(data)</code></pre>
+<pre><code>##   condition quality
+## 1  adequate      51
+## 2  adequate      57
+## 3  adequate      34
+## 4  adequate      73
+## 5  adequate      51
+## 6  adequate      63</code></pre>
+<pre class="r"><code>data%&gt;%group_by(condition)%&gt;%
+  summarize(means=mean(quality))%&gt;%summarize(`mean_diff`=diff(means)) </code></pre>
+<pre><code>## # A tibble: 1 x 1
+##   mean_diff
+##       &lt;dbl&gt;
+## 1    0.0909</code></pre>
+<pre class="r"><code>rand_dist&lt;-vector() 
+
+for(i in 1:5000){
+new&lt;-data.frame(quality=sample(data$quality),condition=data$condition) 
+rand_dist[i]&lt;-mean(new[new$condition==&quot;adequate&quot;,]$quality)-   
+              mean(new[new$condition==&quot;insufficient&quot;,]$quality)} 
+
+{hist(rand_dist); abline(v = c(-0.0909, 0.0909),col=&quot;red&quot;)}</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-4-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>mean(rand_dist&gt;0.09 | rand_dist&lt; -0.09)</code></pre>
+<pre><code>## [1] 0.983</code></pre>
+<p><em>We want to know if there is an association between having adequate sleep duration (&gt;7hrs) and the quality sleep, so we compute a test statistic. Because the variables are categorical (sleep duration &gt;7hr; TRUE vs. FALSE) vs. numeric (sleep score, %) we will compute mean difference. The null hypothesis is that sleep quality is the same for nights when I got &gt;7hours sleep vs. &lt;7 hrs. The alternative hypothesis is that sleep quality is different for night when I got &gt;7hrs of sleep vs. &lt;7hr. Independent samples t-test for comparison; p-value is not significant (p=0.98), sleep quality is not significantly different between nights of more or less than 7hours or sleep</em></p>
+<ul>
+<li><strong>3. (40 pts)</strong> Build a linear regression model predicting one of your response variables from at least 2 other variables, including their interaction. Mean-center any numeric variables involved in the interaction.</li>
+</ul>
+<pre class="r"><code>#center numeric
+df$steps_c &lt;- df$steps - mean(df$steps)
+df$heartRate_c &lt;- df$heartRate - mean(df$heartRate)
+
+#linear regression
+fit&lt;-lm(quality~ adequate + heartRate_c + adequate*heartRate_c, data=df)
+summary(fit)</code></pre>
+<pre><code>##
+## Call:
+## lm(formula = quality ~ adequate + heartRate_c + adequate
+* heartRate_c,
+## data = df)
+##
+## Residuals:
+## Min 1Q Median 3Q Max
+## -28.7796 -8.0357 -0.8929 8.5908 29.5000
+##
+## Coefficients:
+## Estimate Std. Error t value Pr(&gt;|t|)
+## (Intercept) 46.0862 3.9867 11.560 1.13e-13 ***
+## adequateTRUE 1.2710 4.8155 0.264 0.793
+## heartRate_c -1.3467 1.5778 -0.854 0.399
+## adequateTRUE:heartRate_c -0.5819 2.1070 -0.276 0.784
+## ---
+## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1
+&#39; &#39; 1
+##
+## Residual standard error: 13.82 on 36 degrees of freedom
+## Multiple R-squared: 0.07711, Adjusted R-squared:
+0.0001985
+## F-statistic: 1.003 on 3 and 36 DF, p-value: 0.4028</code></pre>
+<pre class="r"><code>#plot regression
+df%&gt;%ggplot(aes(quality,heartRate, color=adequate))+geom_point()+geom_smooth(method = &#39;lm&#39;,se=F)</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-5-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#assumptions
+resids&lt;-fit$residuals; fitvals&lt;-fit$fitted.value
+ggplot()+geom_point(aes(fitvals,resids))+geom_hline(yintercept=0, col=&quot;red&quot;)</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-5-2.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>bptest(fit)</code></pre>
+<pre><code>## 
+##  studentized Breusch-Pagan test
+## 
+## data:  fit
+## BP = 0.59445, df = 3, p-value = 0.8977</code></pre>
+<pre class="r"><code>ks.test(resids, &quot;pnorm&quot;, sd=sd(resids)) #normality </code></pre>
+<pre><code>## 
+##  One-sample Kolmogorov-Smirnov test
+## 
+## data:  resids
+## D = 0.070612, p-value = 0.9884
+## alternative hypothesis: two-sided</code></pre>
+<pre class="r"><code>coeftest(fit, vcov = vcovHC(fit,type=&quot;HC1&quot;))</code></pre>
+<pre><code>##
+## t test of coefficients:
+##
+## Estimate Std. Error t value Pr(&gt;|t|)
+## (Intercept) 46.08617 4.24072 10.8675 6.426e-13 ***
+## adequateTRUE 1.27097 4.99846 0.2543 0.8007
+## heartRate_c -1.34669 1.87673 -0.7176 0.4777
+## adequateTRUE:heartRate_c -0.58188 2.25677 -0.2578 0.7980
+## ---
+## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1
+&#39; &#39; 1</code></pre>
+<p><em>Intercept: 46.08 is mean/predicted quality of sleep for nights I slept more than 7 hours. For every 1 unit increase in waking heart rate, quality of sleep decreased by 1.34%. The slope for heart rate on nights I slept 7 or more hours is 0.582 less than for nights I slept less than 7 hours. However, none of these coefficients were significant predictors of sleep quality. After recomputing the regression with robust standard errors we see the conclusions remain similar with no significance found between the predictors and outcome.</em></p>
+<ul>
+<li><strong>4. (5 pts)</strong> Rerun same regression model (with the interaction), but this time compute bootstrapped standard errors (either by resampling observations or residuals). Discuss any changes you observe in SEs and p-values using these SEs compared to the original SEs and the robust SEs)</li>
+</ul>
+<pre class="r"><code>lm(quality~ adequate + heartRate_c + adequate*heartRate_c, data=df) %&gt;% summary</code></pre>
+<pre><code>##
+## Call:
+## lm(formula = quality ~ adequate + heartRate_c + adequate
+* heartRate_c,
+## data = df)
+##
+## Residuals:
+## Min 1Q Median 3Q Max
+## -28.7796 -8.0357 -0.8929 8.5908 29.5000
+##
+## Coefficients:
+## Estimate Std. Error t value Pr(&gt;|t|)
+## (Intercept) 46.0862 3.9867 11.560 1.13e-13 ***
+## adequateTRUE 1.2710 4.8155 0.264 0.793
+## heartRate_c -1.3467 1.5778 -0.854 0.399
+## adequateTRUE:heartRate_c -0.5819 2.1070 -0.276 0.784
+## ---
+## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1
+&#39; &#39; 1
+##
+## Residual standard error: 13.82 on 36 degrees of freedom
+## Multiple R-squared: 0.07711, Adjusted R-squared:
+0.0001985
+## F-statistic: 1.003 on 3 and 36 DF, p-value: 0.4028</code></pre>
+<pre class="r"><code>fit&lt;-lm(quality~ adequate + heartRate_c + adequate*heartRate_c, data=df)
+resids&lt;-fit$residuals
+fitted&lt;-fit$fitted.values
+resid_resamp&lt;-replicate(5000,{
+new_resids&lt;-sample(resids,replace=TRUE)
+newdat&lt;-df
+newdat$new_y&lt;-fitted+new_resids
+fit&lt;-lm(new_y ~ adequate + heartRate_c + adequate*heartRate_c, data = newdat)
+coef(fit)
+})
+
+resid_resamp%&gt;%t%&gt;%as.data.frame%&gt;%summarize_all(sd)</code></pre>
+<pre><code>## (Intercept) adequateTRUE heartRate_c
+adequateTRUE:heartRate_c
+## 1 3.763668 4.523248 1.49351 1.994219</code></pre>
+<pre class="r"><code>resid_resamp%&gt;%t%&gt;%as.data.frame%&gt;%gather%&gt;%group_by(key)%&gt;%
+summarize(lower=quantile(value,.025), upper=quantile(value,.975))</code></pre>
+<pre><code>## # A tibble: 4 x 3
+##   key                      lower upper
+##   &lt;chr&gt;                    &lt;dbl&gt; &lt;dbl&gt;
+## 1 (Intercept)              38.9  53.8 
+## 2 adequateTRUE             -7.81 10.1 
+## 3 adequateTRUE:heartRate_c -4.50  3.40
+## 4 heartRate_c              -4.23  1.57</code></pre>
+<p><em>Bootstrapped SEs were computed by residuals. Overall, all SEs decreased slightly from the original regression model. However, p-values remained non-significant.</em></p>
+<ul>
+<li><strong>5. (30 pts)</strong> Fit a logistic regression model predicting a binary variable (if you don’t have one, make/get one) from at least two explanatory variables (interaction not necessary).</li>
+</ul>
+<pre class="r"><code>logfit&lt;- glm(adequate ~ steps + heartRate, data=df, family=&quot;binomial&quot;)
+coeftest(logfit)</code></pre>
+<pre><code>## 
+## z test of coefficients:
+## 
+##                Estimate  Std. Error z value Pr(&gt;|z|)
+## (Intercept)  1.4755e+01  1.0053e+01  1.4677   0.1422
+## steps        1.3962e-05  7.3202e-05  0.1907   0.8487
+## heartRate   -2.2699e-01  1.6266e-01 -1.3955   0.1629</code></pre>
+<pre class="r"><code>exp(coeftest(logfit))</code></pre>
+<pre><code>## 
+## z test of coefficients:
+## 
+##               Estimate Std. Error z value Pr(&gt;|z|)
+## (Intercept) 2.5581e+06 2.3228e+04  4.3392    1.153
+## steps       1.0000e+00 1.0001e+00  1.2101    2.337
+## heartRate   7.9693e-01 1.1766e+00  0.2477    1.177</code></pre>
+<pre class="r"><code>prob&lt;-predict(logfit,type=&quot;response&quot;) 
+table(predict=as.numeric(prob&gt;.5),truth=df$adequate)%&gt;%addmargins</code></pre>
+<pre><code>##        truth
+## predict FALSE TRUE Sum
+##     0       2    1   3
+##     1      11   26  37
+##     Sum    13   27  40</code></pre>
+<pre class="r"><code>class_diag(prob,df$adequate)</code></pre>
+<pre><code>##      acc     sens      spec       ppv       auc
+## TRUE 0.7 0.962963 0.1538462 0.7027027 0.6267806</code></pre>
+<pre class="r"><code>ggplot(df, aes(steps,heartRate))+geom_jitter(aes(color=adequate),alpha=.5,size=3)+
+  geom_rug(aes(color=adequate),sides=&quot;right&quot;)+geom_hline(yintercept=.5)</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-7-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>library(plotROC)
+
+ROCplot&lt;-ggplot(df)+geom_roc(aes(d=adequate,m=prob), n.cuts=0)+
+geom_segment(aes(x=0,xend=1,y=0,yend=1),lty=2)
+ROCplot</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-8-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>calc_auc(ROCplot)</code></pre>
+<pre><code>##   PANEL group       AUC
+## 1     1    -1 0.6267806</code></pre>
+<p><em>The logistic regression model shows when controlling for the waking heart rate the effect of steps taken during the day does not have a significant effect on whether or I was getting adequate sleep. This model has high sensitivity (0.96), good accuracy (0.7), good precision (0.7), but very poor specificity(0.153). Overall the model does a poor job of predicting (auc=0.626). The ROC curve reported a fair AUC 0.73</em>`</p>
+<ul>
+<li><strong>6. (25 pts)</strong> Perform a logistic regression predicting the same binary response variable from <em>ALL</em> of the rest of your variables (the more, the better!)</li>
+</ul>
+<pre class="r"><code>lassodat&lt;- df %&gt;% select(quality, minutes, adequate, heartRate, steps)
+logfit2&lt;- glm(adequate~., data = lassodat, family=&quot;binomial&quot;)
+summary(logfit2)</code></pre>
+<pre><code>##
+## Call:
+## glm(formula = adequate ~ ., family = &quot;binomial&quot;, data =
+lassodat)
+##
+## Deviance Residuals:
+## Min 1Q Median 3Q Max
+## -6.478e-05 -2.100e-08 2.100e-08 2.100e-08 5.782e-05
+##
+## Coefficients:
+## Estimate Std. Error z value Pr(&gt;|z|)
+## (Intercept) -1.150e+03 8.618e+05 -0.001 0.999
+## quality 2.552e-01 1.137e+03 0.000 1.000
+## minutes 2.670e+00 1.072e+03 0.002 0.998
+## heartRate 1.842e-01 8.882e+03 0.000 1.000
+## steps 1.569e-03 2.511e+00 0.001 1.000
+##
+## (Dispersion parameter for binomial family taken to be 1)
+##
+## Null deviance: 5.0446e+01 on 39 degrees of freedom
+## Residual deviance: 1.2299e-08 on 35 degrees of freedom
+## AIC: 10
+##
+## Number of Fisher Scoring iterations: 25</code></pre>
+<pre class="r"><code>lassodat$y&lt;-ifelse(lassodat$adequate==1,1,0)
+lassodat$prob&lt;-predict(logfit2,type=&quot;response&quot;) 
+table(predict=as.numeric(lassodat$prob&gt;.5),truth=lassodat$y)%&gt;%addmargins</code></pre>
+<pre><code>##        truth
+## predict  0  1 Sum
+##     0   13  0  13
+##     1    0 27  27
+##     Sum 13 27  40</code></pre>
+<pre class="r"><code>class_diag(prob,lassodat$y)</code></pre>
+<pre><code>##   acc     sens      spec       ppv       auc
+## 1 0.7 0.962963 0.1538462 0.7027027 0.6267806</code></pre>
+<pre class="r"><code>set.seed(1234)
+k=10
+
+data&lt;-lassodat[sample(nrow(lassodat)),] 
+folds&lt;-cut(seq(1:nrow(lassodat)),breaks=k,labels=F) 
+
+diags&lt;-NULL
+for(i in 1:k){
+  train&lt;-data[folds!=i,] 
+  test&lt;-data[folds==i,]
+  truth&lt;-test$y
+  fit&lt;-glm(adequate~., data = lassodat, family=&quot;binomial&quot;)
+  probs&lt;-predict(logfit2,newdata = test,type=&quot;response&quot;)
+  diags&lt;-rbind(diags,class_diag(prob,lassodat$y))
+}
+
+
+summarize_all(diags,mean)</code></pre>
+<pre><code>##   acc     sens      spec       ppv       auc
+## 1 0.7 0.962963 0.1538462 0.7027027 0.6267806</code></pre>
+<pre class="r"><code>y&lt;-as.matrix(lassodat$adequate) 
+x&lt;-model.matrix(adequate~., data = lassodat)[,-1] 
+head(x)</code></pre>
+<pre><code>##   quality minutes heartRate steps y prob
+## 1      51     458        60   896 1    1
+## 2      57     486        61  2929 1    1
+## 3      34     426        65  7375 1    1
+## 4      73     490        64  6192 1    1
+## 5      51     613        63  3392 1    1
+## 6      63     590        60  4895 1    1</code></pre>
+<pre class="r"><code>x&lt;- scale(x) #good idea to standardize 
+
+cv &lt;- cv.glmnet(x,y, family = &quot;binomial&quot;) 
+
+cv&lt;-cv.glmnet(x,y,family=&quot;binomial&quot;)
+lasso&lt;-glmnet(x,y,family=&quot;binomial&quot;,lambda=cv$lambda.1se)
+coef(lasso)</code></pre>
+<pre><code>## 7 x 1 sparse Matrix of class &quot;dgCMatrix&quot;
+##                   s0
+## (Intercept) 2.942786
+## quality     .       
+## minutes     .       
+## heartRate   .       
+## steps       .       
+## y           6.985306
+## prob        .</code></pre>
+<p><em>This model has high sensitivity (0.96), good accuracy (0.7), good precision (0.7), but very poor specificity(0.153). Overall the model does a poor job of predicting (auc=0.626). No variables were retained when performing a lasso on the model. Therefore it is not appropriate to perform any additional lasso on the variables selected from the first lasso- no further analysis necessary.</em></p>
+
+            
+        <hr>         <div class="related-posts">
+                <h5>Related Posts</h5>
+                
+              </div> 
+            </div>
+          </div>
+
+   <hr>  <div class="disqus">
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+
+    (function() {
+      
+      
+      if (window.location.hostname == "localhost")
+        return;
+
+      var disqus_shortname = '';
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  <a href="http://disqus.com/" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div> 
+        </div>
+      </div>
+    </div>
+
+    
+    <footer>
+  <div id="footer">
+    <div class="container">
+      <p class="text-muted">&copy; All rights reserved. Powered by <a href="https://gohugo.io/">Hugo</a> and
+      <a href="http://www.github.com/nurlansu/hugo-sustain/">sustain</a> with ♥</p>
+    </div>
+  </div>
+</footer>
+<div class="footer"></div>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="../../js/docs.min.js"></script>
+<script src="../../js/main.js"></script>
+
+<script src="../../js/ie10-viewport-bug-workaround.js"></script>
+
+
+    
+  </body>
+</html>

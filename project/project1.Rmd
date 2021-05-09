@@ -1,0 +1,213 @@
+---
+title: 'Project 1: Exploratory Data Analysis'
+author: "SDS348"
+date: ''
+output:
+  html_document:
+    toc: yes
+    toc_float:
+      collapsed: no
+      smooth_scroll: yes
+  pdf_document:
+    toc: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE, fig.align = "center", warning = F, message = F,
+tidy=TRUE, tidy.opts=list(width.cutoff=60), R.options=list(max.print=100))
+```
+
+
+```{r eval=F}
+## paste this chunk into the ```{r setup} chunk at the top of your project 1 .Rmd file
+
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE, fig.align = "center", warning = F, message = F,
+tidy=TRUE, tidy.opts=list(width.cutoff=60), R.options=list(max.print=100))
+```
+
+## Data Wrangling and Data Exploration
+
+#### 0. Introduction
+
+- Write a narrative introductory paragraph or two describing the datasets you have chosen, the variables they contain, how they were acquired, and why they are interesting to you. Expand on potential associations you may expect, if any.\
+
+#### The two datasets chosen were taken from Dr. Heather Leidy's current NIH Ro1 6 month clinical randomized control trial aimed to evaluate the long term effects of dietary protein intake at breakfast on measures of adiposity in obese adolscents.  Secondary outcomes measured include sleep health characterized by actigraphy watch data and blood glucose levels characterized by continuous glucose monitor data.  These are the main parameters I have chosen to analyze in Project 1 to investigate possible associations of sleep health and glycemic control using baseline datasets.  As a Phd student in Nutrition Science, my dissertation work focuses on the effects of time restricted feeding patterns on circadian rhythms and diurnal fluctuations in hormonal regulators of appetite and satiety. I aim to identify optimal windows of feeding and fasting to prevent health complications associated with misaligned circadian rhythms.  Based on the currently limited body of research surrounding the health implications of the misalignment of circadian rhythms and meal timing, I expect to see individuals with longer sleep duration to have better glycemic control.
+
+#### 1. Tidying: Rearranging Wide/Long 
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+library(readxl)
+library(cluster)
+library(readxl)
+
+glucose <- read_excel("dailybg.xlsx")
+glimpse(glucose)
+
+sleep <- read_excel("sleepduration.xlsx")
+glimpse(sleep)
+
+activity<- read_excel("dailyactivity.xlsx")
+glimpse(activity)
+```
+#### Call in the appropriate packages first, always.  Read in the excel files.  In order to meet criteria, I will use 3 datasets to join together for analysis.  The data was already tidy.  
+  
+#### 2. Joining/Merging
+
+```{r}
+join<-inner_join(sleep, glucose)
+data <- inner_join(join, activity)
+glimpse(data)
+str(data)
+```
+#### Given that the two datasets are taken from the same trial, certain variables remain consistent across datasets including participant IDs and baseline testing days (Start Date, Start Day, and Day).  To merge the 3 datasets I used 2 simple inner joins to join by all matching rows in each dataset.  This seemed most appropriate given the overlap in multiple variables across all datasets.  There are 112 rows; total of 16 participants with 7 observations for each participant representative of the data collected on each day of the 7 day baseline testing period.  Start date = start date of testing week; Start Day = day of the week; Day = first through seventh day of the testing week; Sleep Duration = sleep time (min); Average Blood Glucose = daily average blood glucose (mg/dL).
+
+#### 3. Wrangling 
+```{r}
+#Select
+data<-data %>% select(ID, `Start Day`, Day, sleep=`Sleep Duration`, glucose=`Avg Blood Glucose`, activity)
+```
+
+```{r}
+#Filter
+data %>% filter(glucose<= 100 & glucose>=70 & sleep>=480) 
+```
+
+```{r}
+#Arrange
+data %>% arrange(sleep)  
+data %>% arrange(glucose)
+data %>% arrange(activity)
+```
+
+```{r}
+#Mutate
+data<-data %>% mutate(`glucose_cat` = case_when(`glucose`>=100 ~ "high (>100mg/dL)",
+                                        `glucose`>=70 & `glucose`<100 ~ "normal (70-100mg/dL)", 
+                                        `glucose`<70 ~ "low (<70mg/dL)"))
+data<-data %>% 
+  mutate(Day = recode(Day,"First","Second","Third","Fourth","Fifth","Sixth","Seventh"))
+data<-data %>% 
+  mutate(sleep = sleep/60) #convert minutes to hours 
+data<-data %>% 
+  mutate(activity = activity/60) #convert minutes to hours 
+```
+
+```{r}
+#Summarize dataset (min, max, median, quantiles)
+summary(data) 
+
+#Summarize glucose, sleep and activity variables and group by ID
+data %>%
+  group_by(ID) %>%
+  summarize(mean_glucose=mean(`glucose`,na.rm=T), sd_glucose=sd(`glucose`, na.rm=T), n(), n_distinct(ID)) #summarize blood glucose (mean, sd, n, n_distinct) grouped by participant
+
+data %>%
+  group_by(ID) %>%
+  summarize(mean_sleep=mean(`sleep`,na.rm=T), sd_sleep=sd(`sleep`, na.rm=T), n(), n_distinct(ID)) #summarize sleep duration (mean, sd, n, n_distinct) grouped by participant
+
+data %>%
+  group_by(ID) %>%
+  summarize(mean_activity=mean(`activity`,na.rm=T), sd_activity=sd(`activity`, na.rm=T), n(), n_distinct(ID)) #summarize daiy activity (mean, sd, n, n_distinct) grouped by participant
+
+#Summarize glucose, sleep and activity variables and group by Start Day (testing day)
+data %>%
+  group_by(`Start Day`) %>%
+  summarize(mean_glucose=mean(`glucose`,na.rm=T), sd_glucose=sd(`glucose`, na.rm=T), n(), n_distinct(`Start Day`)) %>%
+  arrange(mean_glucose)  #summarize blood glucose (mean, sd, n, n_distinct) grouped by testing day 
+
+data %>%
+  group_by(`Start Day`) %>%
+  summarize(mean_sleep=mean(`sleep`,na.rm=T), sd_sleep=sd(`sleep`, na.rm=T), n(), n_distinct(`Start Day`)) %>%
+  arrange(mean_sleep) #summarize sleep duration (mean, sd, n, n_distinct) grouped by testing day 
+
+data %>%
+  group_by(`Start Day`) %>%
+  summarize(mean_activity=mean(`activity`,na.rm=T), sd_activity=sd(`activity`, na.rm=T), n(), n_distinct(`Start Day`)) #summarize daily activity duration (mean, sd, n, n_distinct) grouped by testing day
+```
+
+```{r}
+#Correlation
+data %>% 
+  filter(!is.na(glucose) & !is.na(sleep) & !is.na(activity))%>%
+  summarize(r=sum((glucose-mean(glucose))/sd(glucose)*(sleep-mean(sleep))/sd(sleep)*(activity-mean(activity))/sd(activity))/(n()-1))
+
+cormat <- data %>% select_if(is.numeric) %>% cor(use="pair")
+cormat
+
+tidycor <- cormat %>% as.data.frame %>% rownames_to_column("var1") %>%
+pivot_longer(-1,names_to="var2",values_to="correlation")
+tidycor
+```
+
+#### The normal range of blood glucose values for teenagers are defined as 70-100mg/dL.  Interesting, 8 of 16 participants had normal blood glucose levels across any given day that they slept more than 8 hours.  The shortest amount of sleep a participant recieved on any given night was ~10min sleep (LL1-017) this is likely an error in data, unless the participant pulled an all nighter to study, plausible for this population (13-19yo); the second lowest sleep duration was ~3.5hrs (LL1-061).   The lowest daily average blood glucose level of 56.56mg/dL (LL1-006).  Often times we see life threatening hypoglycemic events at blood sugar levels below 40mg/dL.  Unsuprisingly, participants had the least amount of sleep on Fridays when grouped by start day.  The most interesting finding from the summary statistics, when grouping by start day, is that participants also had the lowest average blood glucose levels on Friday.  Average daily blood glucose levels have a weak inverse correlation with average sleep duration (-0.09) and a weak positive correlation with daily average activity levels (0.15).  Activity and sleep have a weak negative correlation (-0.12).  These correlation values are depicted by the heat map computed below.
+
+#### 4. Visualizing
+- Create a correlation heatmap of your numeric variables the way we did in class
+```{r}
+tidycor%>%ggplot(aes(var1,var2,fill=correlation))+
+geom_tile()+
+scale_fill_gradient2(low="red",mid="white",high="orange")+
+geom_text(aes(label=round(correlation,2)),color = "black", size = 4)+ 
+theme(axis.text.x = element_text(angle = 90, hjust=1))+ 
+coord_fixed() 
+```
+    
+```{r}
+data<-na.omit(data)
+data$glucose_cat <- factor(data$glucose_cat, levels = c("low (<70mg/dL)", "normal (70-100mg/dL)", "high (>100mg/dL)"))
+plot1<-ggplot(data, aes(x = glucose_cat, y = sleep, fill=ID))+
+  geom_bar(stat="summary", position="dodge", fun=mean)+
+  geom_errorbar(stat="summary", position="dodge")+
+  ggtitle("Average Sleep Duration by Blood Glucose Category")+xlab("Glucose")+ylab("Average Sleep Duration (hrs)")
+plot1
+```
+
+```{r}
+data$Day <- factor(data$Day, levels = c("First", "Second", "Third", "Fourth", "Fifth", "Sixth", "Seventh"))
+plot2<- ggplot(data, aes(x = `Day`, y = glucose, color=ID)) +
+  geom_point(size=3) +
+  geom_line(aes(group=ID)) +
+  ggtitle("Average Daily Blood Glucose by Baseline Testing Day")+xlab("Testing Day")+ylab("Blood Glucose (mg/dL)")
+plot2
+```
+####Plot1 represents average sleep duration by average blood glucose category during baseline testing week stratified by participant.  This graph shows individuals who slept between 5-9hours a night had low to normal average daily blood sugars.  Interestingly, the participant who had the most sleep on average (>10hr) had the highest blood sugar and likewise the participant who had the shortest average sleep time (<5hrs) also had higher than normal blood sugar levels.  It could be hypothesized that individuals on either end of the sleep duration spectrum, outside of the recommended range of sleep (~7-8hrs), have worse blood sugar control overall. 
+
+####Plot2 depicts the trend of average daily blood glucose levels across all 7 days of the baseline testing week by participant.  The drastic changes from day to day shown by each participants trends show the high variability of average daily blood glucose levels during one single week.  For example LL1-066 showed in plot1 to have the lowest average sleep duration; plot two reveals that LL1-066 had the sharpest increase of any participant in average daily blood glucose levels seen on the fourth to fifth day of testing, 75mg/dL to over 100mg/dL, again reinforcing that perhaps the shortest sleep duration may result in worse day to day blood sugar control.  
+    
+#### 5. Dimensionality Reduction
+
+```{r}
+data<-na.omit(data)
+head(data)
+
+#Choose number of clusters
+pam_dat<-data%>%select(glucose,sleep, activity)
+sil_width<-vector()
+for(i in 2:10){
+pam_fit <- pam(pam_dat, k = i)
+sil_width[i] <- pam_fit$silinfo$avg.width
+}
+ggplot()+geom_line(aes(x=1:10,y=sil_width))+scale_x_continuous(name="k",breaks=1:10) 
+```
+
+```{r}
+#Cluster the variables
+pam1<-data%>%select(glucose, sleep, activity) %>% scale %>%pam(2)
+pam1 
+final<-data%>%select(glucose, sleep, activity) %>%mutate(cluster=pam1$clustering)
+```
+
+```{r}
+#Visualize the variables 
+library(plotly)
+final%>%plot_ly(x= ~glucose, y = ~sleep, z = ~activity, color= ~cluster,
+type = "scatter3d", mode = "markers") 
+#Interpret average silhouette width 
+plot(pam1,which=2)
+```
+
+#### When determining the number of clusters we find that 2 cluster solutions gives us an sil width >0.5; a reasonable cluster structure has been found.  Following clustering we find that the average silhouette width is actually 0.27 which is a weak correlation and could be artificial.  
+

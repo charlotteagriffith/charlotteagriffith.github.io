@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Charlotte Griffith MS, RDN" />
+    
+    <link rel="shortcut icon" type="image/x-icon" href="../../img/favicon.ico">
+    <title>Project 1: Exploratory Data Analysis</title>
+    <meta name="generator" content="Hugo 0.83.1" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../../css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,200bold,400old" />
+    
+    <!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+
+    
+  </head>
+
+  <body>
+    <div id="wrap">
+      
+      <nav class="navbar navbar-default">
+  <div class="container">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="../../"><i class="fa fa-home"></i></a>
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <div class="navbar-collapse collapse" id="navbar">
+      <ul class="nav navbar-nav navbar-right">
+      
+        
+        <li><a href="../../post/">BLOG</a></li>
+        
+        <li><a href="../../projects/">PROJECTS</a></li>
+        
+        <li><a href="../../resume/">RESUME</a></li>
+        
+      
+      </ul>
+    </div>
+  </div>
+</nav>
+
+      <div class="container">
+        <div class="blog-post">
+          <h3>
+            <strong><a href="../../project/project1/">Project 1: Exploratory Data Analysis</a></strong>
+          </h3>
+        </div>
+ 
+<div class="blog-title">
+          <h4>
+         January 1, 0001 
+            &nbsp;&nbsp;
+            
+          </h4>
+        </div>
+
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <div class="blogpost">
+              
+<script src="../../rmarkdown-libs/htmlwidgets/htmlwidgets.js"></script>
+<script src="../../rmarkdown-libs/plotly-binding/plotly.js"></script>
+<script src="../../rmarkdown-libs/typedarray/typedarray.min.js"></script>
+<script src="../../rmarkdown-libs/jquery/jquery.min.js"></script>
+<link href="../../rmarkdown-libs/crosstalk/css/crosstalk.css" rel="stylesheet" />
+<script src="../../rmarkdown-libs/crosstalk/js/crosstalk.min.js"></script>
+<link href="../../rmarkdown-libs/plotly-htmlwidgets-css/plotly-htmlwidgets.css" rel="stylesheet" />
+<script src="../../rmarkdown-libs/plotly-main/plotly-latest.min.js"></script>
+
+
+<pre class="r"><code>## paste this chunk into the ```{r setup} chunk at the top of
+## your project 1 .Rmd file
+
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE, fig.align = &quot;center&quot;, 
+    warning = F, message = F, tidy = TRUE, tidy.opts = list(width.cutoff = 60), 
+    R.options = list(max.print = 100))</code></pre>
+<div id="data-wrangling-and-data-exploration" class="section level2">
+<h2>Data Wrangling and Data Exploration</h2>
+<div id="introduction" class="section level4">
+<h4>0. Introduction</h4>
+<ul>
+<li>Write a narrative introductory paragraph or two describing the datasets you have chosen, the variables they contain, how they were acquired, and why they are interesting to you. Expand on potential associations you may expect, if any.<br />
+</li>
+</ul>
+</div>
+<div id="the-two-datasets-chosen-were-taken-from-dr.-heather-leidys-current-nih-ro1-6-month-clinical-randomized-control-trial-aimed-to-evaluate-the-long-term-effects-of-dietary-protein-intake-at-breakfast-on-measures-of-adiposity-in-obese-adolscents.-secondary-outcomes-measured-include-sleep-health-characterized-by-actigraphy-watch-data-and-blood-glucose-levels-characterized-by-continuous-glucose-monitor-data.-these-are-the-main-parameters-i-have-chosen-to-analyze-in-project-1-to-investigate-possible-associations-of-sleep-health-and-glycemic-control-using-baseline-datasets.-as-a-phd-student-in-nutrition-science-my-dissertation-work-focuses-on-the-effects-of-time-restricted-feeding-patterns-on-circadian-rhythms-and-diurnal-fluctuations-in-hormonal-regulators-of-appetite-and-satiety.-i-aim-to-identify-optimal-windows-of-feeding-and-fasting-to-prevent-health-complications-associated-with-misaligned-circadian-rhythms.-based-on-the-currently-limited-body-of-research-surrounding-the-health-implications-of-the-misalignment-of-circadian-rhythms-and-meal-timing-i-expect-to-see-individuals-with-longer-sleep-duration-to-have-better-glycemic-control." class="section level4">
+<h4>The two datasets chosen were taken from Dr. Heather Leidy’s current NIH Ro1 6 month clinical randomized control trial aimed to evaluate the long term effects of dietary protein intake at breakfast on measures of adiposity in obese adolscents. Secondary outcomes measured include sleep health characterized by actigraphy watch data and blood glucose levels characterized by continuous glucose monitor data. These are the main parameters I have chosen to analyze in Project 1 to investigate possible associations of sleep health and glycemic control using baseline datasets. As a Phd student in Nutrition Science, my dissertation work focuses on the effects of time restricted feeding patterns on circadian rhythms and diurnal fluctuations in hormonal regulators of appetite and satiety. I aim to identify optimal windows of feeding and fasting to prevent health complications associated with misaligned circadian rhythms. Based on the currently limited body of research surrounding the health implications of the misalignment of circadian rhythms and meal timing, I expect to see individuals with longer sleep duration to have better glycemic control.</h4>
+</div>
+<div id="tidying-rearranging-widelong" class="section level4">
+<h4>1. Tidying: Rearranging Wide/Long</h4>
+<pre class="r"><code>library(dplyr)
+library(ggplot2)
+library(tidyverse)
+library(readxl)
+library(cluster)
+library(readxl)
+
+glucose &lt;- read_excel(&quot;dailybg.xlsx&quot;)
+glimpse(glucose)</code></pre>
+<pre><code>## Rows: 112
+## Columns: 5
+## $ ID                  &lt;chr&gt; &quot;LL1-004&quot;, &quot;LL1-004&quot;, &quot;LL1-004&quot;, &quot;LL1-004&quot;, &quot;LL1-…
+## $ `Start Date`        &lt;dttm&gt; 2019-10-17, 2019-10-18, 2019-10-19, 2019-10-20, …
+## $ `Start Day`         &lt;chr&gt; &quot;Thu&quot;, &quot;Fri&quot;, &quot;Sat&quot;, &quot;Sun&quot;, &quot;Mon&quot;, &quot;Tue&quot;, &quot;Wed&quot;, …
+## $ Day                 &lt;dbl&gt; 1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7, 1, 2, 3…
+## $ `Avg Blood Glucose` &lt;dbl&gt; 81.27083, 78.11458, 75.41667, 68.50000, 74.06250,…</code></pre>
+<pre class="r"><code>sleep &lt;- read_excel(&quot;sleepduration.xlsx&quot;)
+glimpse(sleep)</code></pre>
+<pre><code>## Rows: 112
+## Columns: 5
+## $ ID               &lt;chr&gt; &quot;LL1-004&quot;, &quot;LL1-004&quot;, &quot;LL1-004&quot;, &quot;LL1-004&quot;, &quot;LL1-004…
+## $ `Start Date`     &lt;dttm&gt; 2019-10-17, 2019-10-18, 2019-10-19, 2019-10-20, 201…
+## $ `Start Day`      &lt;chr&gt; &quot;Thu&quot;, &quot;Fri&quot;, &quot;Sat&quot;, &quot;Sun&quot;, &quot;Mon&quot;, &quot;Tue&quot;, &quot;Wed&quot;, &quot;Fr…
+## $ Day              &lt;dbl&gt; 1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4…
+## $ `Sleep Duration` &lt;dbl&gt; 262.5, 367.0, 299.5, 522.5, 251.0, 318.5, 248.5, 327…</code></pre>
+<pre class="r"><code>activity &lt;- read_excel(&quot;dailyactivity.xlsx&quot;)
+glimpse(activity)</code></pre>
+<pre><code>## Rows: 112
+## Columns: 5
+## $ ID           &lt;chr&gt; &quot;LL1-004&quot;, &quot;LL1-004&quot;, &quot;LL1-004&quot;, &quot;LL1-004&quot;, &quot;LL1-004&quot;, &quot;…
+## $ `Start Date` &lt;dttm&gt; 2019-10-17, 2019-10-18, 2019-10-19, 2019-10-20, 2019-10…
+## $ `Start Day`  &lt;chr&gt; &quot;Thu&quot;, &quot;Fri&quot;, &quot;Sat&quot;, &quot;Sun&quot;, &quot;Mon&quot;, &quot;Tue&quot;, &quot;Wed&quot;, &quot;Fri&quot;, …
+## $ Day          &lt;dbl&gt; 1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5,…
+## $ activity     &lt;dbl&gt; 1097.0, 1053.5, 1163.0, 975.0, 1145.0, 1162.0, 1076.5, 1…</code></pre>
+</div>
+<div id="call-in-the-appropriate-packages-first-always.-read-in-the-excel-files.-in-order-to-meet-criteria-i-will-use-3-datasets-to-join-together-for-analysis.-the-data-was-already-tidy." class="section level4">
+<h4>Call in the appropriate packages first, always. Read in the excel files. In order to meet criteria, I will use 3 datasets to join together for analysis. The data was already tidy.</h4>
+</div>
+<div id="joiningmerging" class="section level4">
+<h4>2. Joining/Merging</h4>
+<pre class="r"><code>join &lt;- inner_join(sleep, glucose)
+data &lt;- inner_join(join, activity)
+glimpse(data)</code></pre>
+<pre><code>## Rows: 112
+## Columns: 7
+## $ ID                  &lt;chr&gt; &quot;LL1-004&quot;, &quot;LL1-004&quot;, &quot;LL1-004&quot;, &quot;LL1-004&quot;, &quot;LL1-…
+## $ `Start Date`        &lt;dttm&gt; 2019-10-17, 2019-10-18, 2019-10-19, 2019-10-20, …
+## $ `Start Day`         &lt;chr&gt; &quot;Thu&quot;, &quot;Fri&quot;, &quot;Sat&quot;, &quot;Sun&quot;, &quot;Mon&quot;, &quot;Tue&quot;, &quot;Wed&quot;, …
+## $ Day                 &lt;dbl&gt; 1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7, 1, 2, 3…
+## $ `Sleep Duration`    &lt;dbl&gt; 262.5, 367.0, 299.5, 522.5, 251.0, 318.5, 248.5, …
+## $ `Avg Blood Glucose` &lt;dbl&gt; 81.27083, 78.11458, 75.41667, 68.50000, 74.06250,…
+## $ activity            &lt;dbl&gt; 1097.0, 1053.5, 1163.0, 975.0, 1145.0, 1162.0, 10…</code></pre>
+<pre class="r"><code>str(data)</code></pre>
+<pre><code>## tibble [112 × 7] (S3: tbl_df/tbl/data.frame)
+##  $ ID               : chr [1:112] &quot;LL1-004&quot; &quot;LL1-004&quot; &quot;LL1-004&quot; &quot;LL1-004&quot; ...
+##  $ Start Date       : POSIXct[1:112], format: &quot;2019-10-17&quot; &quot;2019-10-18&quot; ...
+##  $ Start Day        : chr [1:112] &quot;Thu&quot; &quot;Fri&quot; &quot;Sat&quot; &quot;Sun&quot; ...
+##  $ Day              : num [1:112] 1 2 3 4 5 6 7 1 2 3 ...
+##  $ Sleep Duration   : num [1:112] 262 367 300 522 251 ...
+##  $ Avg Blood Glucose: num [1:112] 81.3 78.1 75.4 68.5 74.1 ...
+##  $ activity         : num [1:112] 1097 1054 1163 975 1145 ...</code></pre>
+</div>
+<div id="given-that-the-two-datasets-are-taken-from-the-same-trial-certain-variables-remain-consistent-across-datasets-including-participant-ids-and-baseline-testing-days-start-date-start-day-and-day.-to-merge-the-3-datasets-i-used-2-simple-inner-joins-to-join-by-all-matching-rows-in-each-dataset.-this-seemed-most-appropriate-given-the-overlap-in-multiple-variables-across-all-datasets.-there-are-112-rows-total-of-16-participants-with-7-observations-for-each-participant-representative-of-the-data-collected-on-each-day-of-the-7-day-baseline-testing-period.-start-date-start-date-of-testing-week-start-day-day-of-the-week-day-first-through-seventh-day-of-the-testing-week-sleep-duration-sleep-time-min-average-blood-glucose-daily-average-blood-glucose-mgdl." class="section level4">
+<h4>Given that the two datasets are taken from the same trial, certain variables remain consistent across datasets including participant IDs and baseline testing days (Start Date, Start Day, and Day). To merge the 3 datasets I used 2 simple inner joins to join by all matching rows in each dataset. This seemed most appropriate given the overlap in multiple variables across all datasets. There are 112 rows; total of 16 participants with 7 observations for each participant representative of the data collected on each day of the 7 day baseline testing period. Start date = start date of testing week; Start Day = day of the week; Day = first through seventh day of the testing week; Sleep Duration = sleep time (min); Average Blood Glucose = daily average blood glucose (mg/dL).</h4>
+</div>
+<div id="wrangling" class="section level4">
+<h4>3. Wrangling</h4>
+<pre class="r"><code># Select
+data &lt;- data %&gt;% select(ID, `Start Day`, Day, sleep = `Sleep Duration`, 
+    glucose = `Avg Blood Glucose`, activity)</code></pre>
+<pre class="r"><code># Filter
+data %&gt;% filter(glucose &lt;= 100 &amp; glucose &gt;= 70 &amp; sleep &gt;= 480)</code></pre>
+<pre><code>## # A tibble: 15 x 6
+##    ID      `Start Day`   Day sleep glucose activity
+##    &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;
+##  1 LL1-015 Sat             3  560     72.9     768.
+##  2 LL1-015 Mon             5  701     77.1     868.
+##  3 LL1-015 Wed             7  604.    76.9     810 
+##  4 LL1-019 Fri             1  512.    70.2     837 
+##  5 LL1-038 Sun             3  520.    90.5     858 
+##  6 LL1-038 Mon             4  502.    90.6     930.
+##  7 LL1-038 Thu             7  559     96.1    1140.
+##  8 LL1-039 Sun             3  514     84.7     810 
+##  9 LL1-039 Mon             4  510.    85.3    1002.
+## 10 LL1-040 Sat             2  490.    81.4     946.
+## 11 LL1-049 Thu             1  663     90.9     838.
+## 12 LL1-049 Fri             2  558     83.8     966.
+## 13 LL1-067 Sun             2  522.    81.3     920.
+## 14 LL1-067 Tue             4  515     87.0    1002.
+## 15 LL1-205 Tue             4  486.    71.4     791</code></pre>
+<pre class="r"><code># Arrange
+data %&gt;% arrange(sleep)</code></pre>
+<pre><code>## # A tibble: 112 x 6
+##    ID      `Start Day`   Day sleep glucose activity
+##    &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;
+##  1 LL1-017 Sat             5   10     72.4     326.
+##  2 LL1-061 Fri             2  217     92.7    1074.
+##  3 LL1-215 Sat             7  224.    69.1     439 
+##  4 LL1-061 Wed             7  226.    91.4    1064.
+##  5 LL1-061 Thu             1  245     95.2    1240.
+##  6 LL1-004 Wed             7  248.    72.9    1076.
+##  7 LL1-004 Mon             5  251     74.1    1145 
+##  8 LL1-040 Wed             6  254.    98.8     949 
+##  9 LL1-004 Thu             1  262.    81.3    1097 
+## 10 LL1-066 Fri             2  265     71.9    1070.
+## # … with 102 more rows</code></pre>
+<pre class="r"><code>data %&gt;% arrange(glucose)</code></pre>
+<pre><code>## # A tibble: 112 x 6
+##    ID      `Start Day`   Day sleep glucose activity
+##    &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;
+##  1 LL1-006 Sat             2  435     56.6     958 
+##  2 LL1-072 Sun             4  585     56.7    1030 
+##  3 LL1-072 Mon             5  367     57.1     849 
+##  4 LL1-006 Fri             1  327     60.8    1093 
+##  5 LL1-072 Fri             2  630.    61.0    1101 
+##  6 LL1-017 Tue             1  475     61.3     884.
+##  7 LL1-072 Wed             7  565     61.4     891 
+##  8 LL1-019 Sun             3  406.    61.5     820.
+##  9 LL1-031 Tue             6  382     62.2     977 
+## 10 LL1-072 Sat             3  340.    62.2     825 
+## # … with 102 more rows</code></pre>
+<pre class="r"><code>data %&gt;% arrange(activity)</code></pre>
+<pre><code>## # A tibble: 112 x 6
+##    ID      `Start Day`   Day sleep glucose activity
+##    &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;
+##  1 LL1-017 Sat             5   10     72.4     326.
+##  2 LL1-215 Tue             3  569    100.      378.
+##  3 LL1-215 Sat             7  224.    69.1     439 
+##  4 LL1-215 Wed             4  824.   102.      592.
+##  5 LL1-015 Sun             4  354     69.6     646.
+##  6 LL1-072 Thurs           1  464     67.6     662 
+##  7 LL1-015 Sat             3  560     72.9     768.
+##  8 LL1-205 Thu             6  630     67.1     774.
+##  9 LL1-205 Tue             4  486.    71.4     791 
+## 10 LL1-006 Tue             5  591     67.5     805 
+## # … with 102 more rows</code></pre>
+<pre class="r"><code># Mutate
+data &lt;- data %&gt;% mutate(glucose_cat = case_when(glucose &gt;= 100 ~ 
+    &quot;high (&gt;100mg/dL)&quot;, glucose &gt;= 70 &amp; glucose &lt; 100 ~ &quot;normal (70-100mg/dL)&quot;, 
+    glucose &lt; 70 ~ &quot;low (&lt;70mg/dL)&quot;))
+data &lt;- data %&gt;% mutate(Day = recode(Day, &quot;First&quot;, &quot;Second&quot;, 
+    &quot;Third&quot;, &quot;Fourth&quot;, &quot;Fifth&quot;, &quot;Sixth&quot;, &quot;Seventh&quot;))
+data &lt;- data %&gt;% mutate(sleep = sleep/60)  #convert minutes to hours 
+data &lt;- data %&gt;% mutate(activity = activity/60)  #convert minutes to hours </code></pre>
+<pre class="r"><code># Summarize dataset (min, max, median, quantiles)
+summary(data)</code></pre>
+<pre><code>##       ID             Start Day             Day                sleep        
+##  Length:112         Length:112         Length:112         Min.   : 0.1667  
+##  Class :character   Class :character   Class :character   1st Qu.: 5.7458  
+##  Mode  :character   Mode  :character   Mode  :character   Median : 6.9833  
+##                                                           Mean   : 7.0584  
+##                                                           3rd Qu.: 8.2083  
+##                                                           Max.   :13.7417  
+##     glucose          activity      glucose_cat       
+##  Min.   : 56.56   Min.   : 5.425   Length:112        
+##  1st Qu.: 69.81   1st Qu.:14.450   Class :character  
+##  Median : 76.57   Median :15.925   Mode  :character  
+##  Mean   : 79.51   Mean   :16.075                     
+##  3rd Qu.: 90.81   3rd Qu.:17.727                     
+##  Max.   :108.27   Max.   :29.483</code></pre>
+<pre class="r"><code># Summarize glucose, sleep and activity variables and group
+# by ID
+data %&gt;% group_by(ID) %&gt;% summarize(mean_glucose = mean(glucose, 
+    na.rm = T), sd_glucose = sd(glucose, na.rm = T), n(), n_distinct(ID))  #summarize blood glucose (mean, sd, n, n_distinct) grouped by participant</code></pre>
+<pre><code>## # A tibble: 16 x 5
+##    ID      mean_glucose sd_glucose `n()` `n_distinct(ID)`
+##    &lt;chr&gt;          &lt;dbl&gt;      &lt;dbl&gt; &lt;int&gt;            &lt;int&gt;
+##  1 LL1-004         74.5       4.24     7                1
+##  2 LL1-006         65.1       5.41     7                1
+##  3 LL1-015         73.0       4.07     7                1
+##  4 LL1-017         71.9       5.23     7                1
+##  5 LL1-019         69.2       3.98     7                1
+##  6 LL1-031         72.2       6.71     7                1
+##  7 LL1-038         91.5       7.11     7                1
+##  8 LL1-039         83.0       3.17     7                1
+##  9 LL1-040         90.0      12.1      7                1
+## 10 LL1-049         93.6       9.60     7                1
+## 11 LL1-061         94.6       2.62     7                1
+## 12 LL1-066         86.0      17.5      7                1
+## 13 LL1-067         83.1       5.65     7                1
+## 14 LL1-072         61.2       3.68     7                1
+## 15 LL1-205         70.0       3.81     7                1
+## 16 LL1-215         93.1      11.6      7                1</code></pre>
+<pre class="r"><code>data %&gt;% group_by(ID) %&gt;% summarize(mean_sleep = mean(sleep, 
+    na.rm = T), sd_sleep = sd(sleep, na.rm = T), n(), n_distinct(ID))  #summarize sleep duration (mean, sd, n, n_distinct) grouped by participant</code></pre>
+<pre><code>## # A tibble: 16 x 5
+##    ID      mean_sleep sd_sleep `n()` `n_distinct(ID)`
+##    &lt;chr&gt;        &lt;dbl&gt;    &lt;dbl&gt; &lt;int&gt;            &lt;int&gt;
+##  1 LL1-004       5.40    1.62      7                1
+##  2 LL1-006       7.44    1.52      7                1
+##  3 LL1-015       8.40    2.11      7                1
+##  4 LL1-017       5.84    2.68      7                1
+##  5 LL1-019       8.16    1.28      7                1
+##  6 LL1-031       7.01    0.743     7                1
+##  7 LL1-038       7.14    1.63      7                1
+##  8 LL1-039       7.62    0.709     7                1
+##  9 LL1-040       6.29    1.37      7                1
+## 10 LL1-049       7.67    1.88      7                1
+## 11 LL1-061       5.43    1.69      7                1
+## 12 LL1-066       6.13    1.65      7                1
+## 13 LL1-067       7.00    1.30      7                1
+## 14 LL1-072       8.36    1.88      7                1
+## 15 LL1-205       7.39    1.71      7                1
+## 16 LL1-215       7.67    3.23      7                1</code></pre>
+<pre class="r"><code>data %&gt;% group_by(ID) %&gt;% summarize(mean_activity = mean(activity, 
+    na.rm = T), sd_activity = sd(activity, na.rm = T), n(), n_distinct(ID))  #summarize daiy activity (mean, sd, n, n_distinct) grouped by participant</code></pre>
+<pre><code>## # A tibble: 16 x 5
+##    ID      mean_activity sd_activity `n()` `n_distinct(ID)`
+##    &lt;chr&gt;           &lt;dbl&gt;       &lt;dbl&gt; &lt;int&gt;            &lt;int&gt;
+##  1 LL1-004          18.3        1.14     7                1
+##  2 LL1-006          16.0        1.69     7                1
+##  3 LL1-015          14.1        2.00     7                1
+##  4 LL1-017          15.2        6.01     7                1
+##  5 LL1-019          15.0        1.04     7                1
+##  6 LL1-031          15.7        1.01     7                1
+##  7 LL1-038          16.1        2.04     7                1
+##  8 LL1-039          15.6        1.16     7                1
+##  9 LL1-040          17.7        1.95     7                1
+## 10 LL1-049          15.9        1.97     7                1
+## 11 LL1-061          17.6        2.27     7                1
+## 12 LL1-066          17.8        2.03     7                1
+## 13 LL1-067          16.6        1.20     7                1
+## 14 LL1-072          14.9        2.38     7                1
+## 15 LL1-205          15.2        1.80     7                1
+## 16 LL1-215          15.5        9.07     7                1</code></pre>
+<pre class="r"><code># Summarize glucose, sleep and activity variables and group
+# by Start Day (testing day)
+data %&gt;% group_by(`Start Day`) %&gt;% summarize(mean_glucose = mean(glucose, 
+    na.rm = T), sd_glucose = sd(glucose, na.rm = T), n(), n_distinct(`Start Day`)) %&gt;% 
+    arrange(mean_glucose)  #summarize blood glucose (mean, sd, n, n_distinct) grouped by testing day </code></pre>
+<pre><code>## # A tibble: 9 x 5
+##   `Start Day` mean_glucose sd_glucose `n()` `n_distinct(\`Start Day\`)`
+##   &lt;chr&gt;              &lt;dbl&gt;      &lt;dbl&gt; &lt;int&gt;                       &lt;int&gt;
+## 1 Tues                62.8      NA        1                           1
+## 2 Thurs               67.6      NA        1                           1
+## 3 Fri                 74.8       9.80    16                           1
+## 4 Sat                 75.0      10.3     16                           1
+## 5 Sun                 78.1      12.1     16                           1
+## 6 Tue                 82.2      15.5     14                           1
+## 7 Mon                 82.2      13.3     16                           1
+## 8 Thu                 83.0      13.3     16                           1
+## 9 Wed                 83.4      14.7     16                           1</code></pre>
+<pre class="r"><code>data %&gt;% group_by(`Start Day`) %&gt;% summarize(mean_sleep = mean(sleep, 
+    na.rm = T), sd_sleep = sd(sleep, na.rm = T), n(), n_distinct(`Start Day`)) %&gt;% 
+    arrange(mean_sleep)  #summarize sleep duration (mean, sd, n, n_distinct) grouped by testing day </code></pre>
+<pre><code>## # A tibble: 9 x 5
+##   `Start Day` mean_sleep sd_sleep `n()` `n_distinct(\`Start Day\`)`
+##   &lt;chr&gt;            &lt;dbl&gt;    &lt;dbl&gt; &lt;int&gt;                       &lt;int&gt;
+## 1 Sat               6.32     2.34    16                           1
+## 2 Mon               6.84     1.90    16                           1
+## 3 Fri               6.92     1.76    16                           1
+## 4 Thu               7.05     1.97    16                           1
+## 5 Wed               7.24     2.54    16                           1
+## 6 Sun               7.38     1.31    16                           1
+## 7 Tue               7.52     1.43    14                           1
+## 8 Thurs             7.73    NA        1                           1
+## 9 Tues              9.32    NA        1                           1</code></pre>
+<pre class="r"><code>data %&gt;% group_by(`Start Day`) %&gt;% summarize(mean_activity = mean(activity, 
+    na.rm = T), sd_activity = sd(activity, na.rm = T), n(), n_distinct(`Start Day`))  #summarize daily activity duration (mean, sd, n, n_distinct) grouped by testing day</code></pre>
+<pre><code>## # A tibble: 9 x 5
+##   `Start Day` mean_activity sd_activity `n()` `n_distinct(\`Start Day\`)`
+##   &lt;chr&gt;               &lt;dbl&gt;       &lt;dbl&gt; &lt;int&gt;                       &lt;int&gt;
+## 1 Fri                  18.6        3.94    16                           1
+## 2 Mon                  16.9        2.94    16                           1
+## 3 Sat                  14.7        3.75    16                           1
+## 4 Sun                  15.1        1.84    16                           1
+## 5 Thu                  16.5        2.21    16                           1
+## 6 Thurs                11.0       NA        1                           1
+## 7 Tue                  15.6        3.50    14                           1
+## 8 Tues                 14.8       NA        1                           1
+## 9 Wed                  15.5        2.21    16                           1</code></pre>
+<pre class="r"><code># Correlation
+data %&gt;% filter(!is.na(glucose) &amp; !is.na(sleep) &amp; !is.na(activity)) %&gt;% 
+    summarize(r = sum((glucose - mean(glucose))/sd(glucose) * 
+        (sleep - mean(sleep))/sd(sleep) * (activity - mean(activity))/sd(activity))/(n() - 
+        1))</code></pre>
+<pre><code>## # A tibble: 1 x 1
+##        r
+##    &lt;dbl&gt;
+## 1 -0.208</code></pre>
+<pre class="r"><code>cormat &lt;- data %&gt;% select_if(is.numeric) %&gt;% cor(use = &quot;pair&quot;)
+cormat</code></pre>
+<pre><code>##                sleep     glucose   activity
+## sleep     1.00000000 -0.09388388 -0.1241677
+## glucose  -0.09388388  1.00000000  0.1521350
+## activity -0.12416773  0.15213504  1.0000000</code></pre>
+<pre class="r"><code>tidycor &lt;- cormat %&gt;% as.data.frame %&gt;% rownames_to_column(&quot;var1&quot;) %&gt;% 
+    pivot_longer(-1, names_to = &quot;var2&quot;, values_to = &quot;correlation&quot;)
+tidycor</code></pre>
+<pre><code>## # A tibble: 9 x 3
+##   var1     var2     correlation
+##   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;
+## 1 sleep    sleep         1     
+## 2 sleep    glucose      -0.0939
+## 3 sleep    activity     -0.124 
+## 4 glucose  sleep        -0.0939
+## 5 glucose  glucose       1     
+## 6 glucose  activity      0.152 
+## 7 activity sleep        -0.124 
+## 8 activity glucose       0.152 
+## 9 activity activity      1</code></pre>
+</div>
+<div id="the-normal-range-of-blood-glucose-values-for-teenagers-are-defined-as-70-100mgdl.-interesting-8-of-16-participants-had-normal-blood-glucose-levels-across-any-given-day-that-they-slept-more-than-8-hours.-the-shortest-amount-of-sleep-a-participant-recieved-on-any-given-night-was-10min-sleep-ll1-017-this-is-likely-an-error-in-data-unless-the-participant-pulled-an-all-nighter-to-study-plausible-for-this-population-13-19yo-the-second-lowest-sleep-duration-was-3.5hrs-ll1-061.-the-lowest-daily-average-blood-glucose-level-of-56.56mgdl-ll1-006.-often-times-we-see-life-threatening-hypoglycemic-events-at-blood-sugar-levels-below-40mgdl.-unsuprisingly-participants-had-the-least-amount-of-sleep-on-fridays-when-grouped-by-start-day.-the-most-interesting-finding-from-the-summary-statistics-when-grouping-by-start-day-is-that-participants-also-had-the-lowest-average-blood-glucose-levels-on-friday.-average-daily-blood-glucose-levels-have-a-weak-inverse-correlation-with-average-sleep-duration--0.09-and-a-weak-positive-correlation-with-daily-average-activity-levels-0.15.-activity-and-sleep-have-a-weak-negative-correlation--0.12.-these-correlation-values-are-depicted-by-the-heat-map-computed-below." class="section level4">
+<h4>The normal range of blood glucose values for teenagers are defined as 70-100mg/dL. Interesting, 8 of 16 participants had normal blood glucose levels across any given day that they slept more than 8 hours. The shortest amount of sleep a participant recieved on any given night was ~10min sleep (LL1-017) this is likely an error in data, unless the participant pulled an all nighter to study, plausible for this population (13-19yo); the second lowest sleep duration was ~3.5hrs (LL1-061). The lowest daily average blood glucose level of 56.56mg/dL (LL1-006). Often times we see life threatening hypoglycemic events at blood sugar levels below 40mg/dL. Unsuprisingly, participants had the least amount of sleep on Fridays when grouped by start day. The most interesting finding from the summary statistics, when grouping by start day, is that participants also had the lowest average blood glucose levels on Friday. Average daily blood glucose levels have a weak inverse correlation with average sleep duration (-0.09) and a weak positive correlation with daily average activity levels (0.15). Activity and sleep have a weak negative correlation (-0.12). These correlation values are depicted by the heat map computed below.</h4>
+</div>
+<div id="visualizing" class="section level4">
+<h4>4. Visualizing</h4>
+<ul>
+<li>Create a correlation heatmap of your numeric variables the way we did in class</li>
+</ul>
+<pre class="r"><code>tidycor %&gt;% ggplot(aes(var1, var2, fill = correlation)) + geom_tile() + 
+    scale_fill_gradient2(low = &quot;red&quot;, mid = &quot;white&quot;, high = &quot;orange&quot;) + 
+    geom_text(aes(label = round(correlation, 2)), color = &quot;black&quot;, 
+        size = 4) + theme(axis.text.x = element_text(angle = 90, 
+    hjust = 1)) + coord_fixed()</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>data &lt;- na.omit(data)
+data$glucose_cat &lt;- factor(data$glucose_cat, levels = c(&quot;low (&lt;70mg/dL)&quot;, 
+    &quot;normal (70-100mg/dL)&quot;, &quot;high (&gt;100mg/dL)&quot;))
+plot1 &lt;- ggplot(data, aes(x = glucose_cat, y = sleep, fill = ID)) + 
+    geom_bar(stat = &quot;summary&quot;, position = &quot;dodge&quot;, fun = mean) + 
+    geom_errorbar(stat = &quot;summary&quot;, position = &quot;dodge&quot;) + ggtitle(&quot;Average Sleep Duration by Blood Glucose Category&quot;) + 
+    xlab(&quot;Glucose&quot;) + ylab(&quot;Average Sleep Duration (hrs)&quot;)
+plot1</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>data$Day &lt;- factor(data$Day, levels = c(&quot;First&quot;, &quot;Second&quot;, &quot;Third&quot;, 
+    &quot;Fourth&quot;, &quot;Fifth&quot;, &quot;Sixth&quot;, &quot;Seventh&quot;))
+plot2 &lt;- ggplot(data, aes(x = Day, y = glucose, color = ID)) + 
+    geom_point(size = 3) + geom_line(aes(group = ID)) + ggtitle(&quot;Average Daily Blood Glucose by Baseline Testing Day&quot;) + 
+    xlab(&quot;Testing Day&quot;) + ylab(&quot;Blood Glucose (mg/dL)&quot;)
+plot2</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" />
+####Plot1 represents average sleep duration by average blood glucose category during baseline testing week stratified by participant. This graph shows individuals who slept between 5-9hours a night had low to normal average daily blood sugars. Interestingly, the participant who had the most sleep on average (&gt;10hr) had the highest blood sugar and likewise the participant who had the shortest average sleep time (&lt;5hrs) also had higher than normal blood sugar levels. It could be hypothesized that individuals on either end of the sleep duration spectrum, outside of the recommended range of sleep (~7-8hrs), have worse blood sugar control overall.</p>
+<p>####Plot2 depicts the trend of average daily blood glucose levels across all 7 days of the baseline testing week by participant. The drastic changes from day to day shown by each participants trends show the high variability of average daily blood glucose levels during one single week. For example LL1-066 showed in plot1 to have the lowest average sleep duration; plot two reveals that LL1-066 had the sharpest increase of any participant in average daily blood glucose levels seen on the fourth to fifth day of testing, 75mg/dL to over 100mg/dL, again reinforcing that perhaps the shortest sleep duration may result in worse day to day blood sugar control.</p>
+</div>
+<div id="dimensionality-reduction" class="section level4">
+<h4>5. Dimensionality Reduction</h4>
+<pre class="r"><code>data &lt;- na.omit(data)
+head(data)</code></pre>
+<pre><code>## # A tibble: 6 x 7
+##   ID      `Start Day` Day    sleep glucose activity glucose_cat         
+##   &lt;chr&gt;   &lt;chr&gt;       &lt;fct&gt;  &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt; &lt;fct&gt;               
+## 1 LL1-004 Thu         First   4.38    81.3     18.3 normal (70-100mg/dL)
+## 2 LL1-004 Fri         Second  6.12    78.1     17.6 normal (70-100mg/dL)
+## 3 LL1-004 Sat         Third   4.99    75.4     19.4 normal (70-100mg/dL)
+## 4 LL1-004 Sun         Fourth  8.71    68.5     16.2 low (&lt;70mg/dL)      
+## 5 LL1-004 Mon         Fifth   4.18    74.1     19.1 normal (70-100mg/dL)
+## 6 LL1-004 Tue         Sixth   5.31    71.4     19.4 normal (70-100mg/dL)</code></pre>
+<pre class="r"><code># Choose number of clusters
+pam_dat &lt;- data %&gt;% select(glucose, sleep, activity)
+sil_width &lt;- vector()
+for (i in 2:10) {
+    pam_fit &lt;- pam(pam_dat, k = i)
+    sil_width[i] &lt;- pam_fit$silinfo$avg.width
+}
+ggplot() + geom_line(aes(x = 1:10, y = sil_width)) + scale_x_continuous(name = &quot;k&quot;, 
+    breaks = 1:10)</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># Cluster the variables
+pam1 &lt;- data %&gt;% select(glucose, sleep, activity) %&gt;% scale %&gt;% 
+    pam(2)
+pam1</code></pre>
+<pre><code>## Medoids:
+##      ID    glucose       sleep   activity
+## [1,] 90  0.7543286 -0.10842150  0.3065328
+## [2,] 35 -0.5939484  0.06065565 -0.1678209
+## Clustering vector:
+##   [1] 1 1 1 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 1 2 2 2 2 2 2 2 2 2 2 2 2
+##  [38] 2 2 2 2 2 1 1 1 1 1 1 1 2 1 2 1 1 1 1 2 2 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+##  [75] 1 1 1 2 2 2 2 1 1 1 2 2 1 1 1 1 2 2 2 2 2 2 2 2 2 2
+##  [ reached getOption(&quot;max.print&quot;) -- omitted 12 entries ]
+## Objective function:
+##    build     swap 
+## 1.303406 1.255561 
+## 
+## Available components:
+##  [1] &quot;medoids&quot;    &quot;id.med&quot;     &quot;clustering&quot; &quot;objective&quot;  &quot;isolation&quot; 
+##  [6] &quot;clusinfo&quot;   &quot;silinfo&quot;    &quot;diss&quot;       &quot;call&quot;       &quot;data&quot;</code></pre>
+<pre class="r"><code>final &lt;- data %&gt;% select(glucose, sleep, activity) %&gt;% mutate(cluster = pam1$clustering)</code></pre>
+<pre class="r"><code># Visualize the variables
+library(plotly)
+final %&gt;% plot_ly(x = ~glucose, y = ~sleep, z = ~activity, color = ~cluster, 
+    type = &quot;scatter3d&quot;, mode = &quot;markers&quot;)</code></pre>
+<div id="htmlwidget-1" style="width:672px;height:480px;" class="plotly html-widget"></div>
+<script type="application/json" data-for="htmlwidget-1">{"x":{"visdat":{"422f31007726":["function () ","plotlyVisDat"]},"cur_data":"422f31007726","attrs":{"422f31007726":{"x":{},"y":{},"z":{},"mode":"markers","color":{},"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"type":"scatter3d"}},"layout":{"margin":{"b":40,"l":60,"t":25,"r":10},"scene":{"xaxis":{"title":"glucose"},"yaxis":{"title":"sleep"},"zaxis":{"title":"activity"}},"hovermode":"closest","showlegend":false,"legend":{"yanchor":"top","y":0.5}},"source":"A","config":{"showSendToCloud":false},"data":[{"x":[81.2708333333333,78.1145833333333,75.4166666666667,68.5,74.0625,71.4375,72.875,60.8125,56.5625,71.3958333333333,71.125,67.53125,63.7083333333333,64.2604166666667,69.8333333333333,67.7083333333333,72.8541666666667,69.625,77.0520833333333,77.25,76.90625,61.3020833333333,72.4166666666667,72.9479166666667,71.5625,72.4479166666667,74.125,78.6145833333333,70.21875,67.7291666666667,61.46875,68.8958333333333,69.9791666666667,74.1666666666667,71.8020833333333,72.78125,78.625,82.3541666666667,69.0520833333333,68.375,62.1666666666667,72.1354166666667,81.34375,83.59375,90.5104166666667,90.5833333333333,98.96875,99.1458333333333,96.1041666666667,76.2291666666667,85.3229166666667,84.65625,85.3333333333333,82.7083333333333,83.96875,83.03125,66.8958333333333,81.3854166666667,90.7916666666667,93.1041666666667,98.5833333333333,98.7708333333333,100.770833333333,90.8645833333333,83.8020833333333,80.3645833333333,92.8541666666667,98.5208333333333,106.927083333333,102.072916666667,95.2395833333333,92.6979166666667,98.5104166666667,96.9166666666667,92.2083333333333,95.0416666666667,91.3645833333333,72.8958333333333,71.9375,69.75,73.6145833333333,101.34375,108.270833333333,103.854166666667,77.4375,81.3020833333333,83.1354166666667,87.03125,88.9166666666667,89.3020833333333,74.8125,67.5520833333333,61.03125,62.1666666666667,56.6979166666667,57.0520833333333,62.8125,61.4166666666667,65.7708333333333,76,73.3020833333333,71.4270833333333,70.1770833333333,67.0625,66.6041666666667,91.75,102.625,100.302083333333,102.302083333333,91.96875,93.8541666666667,69.125],"y":[4.375,6.11666666666667,4.99166666666667,8.70833333333333,4.18333333333333,5.30833333333333,4.14166666666667,5.45,7.25,5.73333333333333,7.4,9.85,8.4,7.98333333333333,6.83333333333333,8.475,9.33333333333333,5.9,11.6833333333333,6.48333333333333,10.0583333333333,7.91666666666667,7.11666666666667,6.35,7.05833333333333,0.166666666666667,7.38333333333333,4.85833333333333,8.54166666666667,9.95,6.775,8.73333333333333,9.23333333333333,6.69166666666667,7.175,7.64166666666667,6.40833333333333,7.40833333333333,8.05833333333333,6.075,6.36666666666667,7.09166666666667,6.475,5.14166666666667,8.65833333333333,8.35833333333333,5.50833333333333,6.525,9.31666666666667,6.7,7.36666666666667,8.56666666666667,8.49166666666667,7.85,7.075,7.3,7.35833333333333,8.15833333333333,5.40833333333333,5.26666666666667,6.675,4.24166666666667,6.93333333333333,11.05,9.3,5.99166666666667,5.96666666666667,6.64166666666667,7.00833333333333,7.73333333333333,4.08333333333333,3.61666666666667,5.06666666666667,7.63333333333333,6.85,6.95833333333333,3.775,5.55833333333333,4.41666666666667,6.34166666666667,7.775,4.6,5.35,8.85,6.375,8.70833333333333,7.375,8.58333333333333,5.375,6.85,5.75,7.73333333333333,10.4916666666667,5.675,9.75,6.11666666666667,9.325,9.41666666666667,8.15,6.875,5.625,8.10833333333333,5.64166666666667,10.5,6.825,6.25,7.25,9.48333333333333,13.7416666666667,5.475,7.76666666666667,3.725],"z":[18.2833333333333,17.5583333333333,19.3833333333333,16.25,19.0833333333333,19.3666666666667,17.9416666666667,18.2166666666667,15.9666666666667,17.7333333333333,16.2833333333333,13.4166666666667,14.425,15.925,16.9833333333333,15.2666666666667,12.8083333333333,10.7583333333333,14.4583333333333,15.0916666666667,13.5,14.7416666666667,13.9666666666667,15.9,26.0916666666667,5.425,14.8333333333333,15.35,13.95,15.925,13.6583333333333,14.0083333333333,15.95,15.7583333333333,15.5416666666667,16.175,16.0166666666667,13.7,15.3916666666667,16.8416666666667,16.2833333333333,15.4666666666667,19.0166666666667,14.3666666666667,14.3,15.4916666666667,15.075,15.4916666666667,18.9916666666667,16.1833333333333,14.5416666666667,13.5,16.6916666666667,15.6833333333333,16.4416666666667,16.1583333333333,19.7333333333333,15.7583333333333,17.9166666666667,16.1333333333333,20.65,15.8166666666667,18.1833333333333,13.975,16.1083333333333,18.5,13.4833333333333,18.3666666666667,15.825,15.0416666666667,20.6583333333333,17.8916666666667,16.925,14.275,15.5666666666667,20.0333333333333,17.725,19.7416666666667,17.825,17.975,16.5416666666667,18.8083333333333,14.0416666666667,19.8583333333333,17.3333333333333,15.325,14.7416666666667,16.6916666666667,17.0833333333333,17.05,18.1916666666667,11.0333333333333,18.35,13.75,17.1666666666667,14.15,14.85,14.85,15.9583333333333,14.275,17.6,13.1833333333333,15.3666666666667,12.9083333333333,16.925,15.4666666666667,26.1166666666667,6.30833333333333,9.85833333333333,14.1333333333333,29.4833333333333,7.31666666666667],"mode":"markers","type":"scatter3d","marker":{"colorbar":{"title":"cluster","ticklen":2},"cmin":1,"cmax":2,"colorscale":[["0","rgba(68,1,84,1)"],["0.0416666666666667","rgba(70,19,97,1)"],["0.0833333333333333","rgba(72,32,111,1)"],["0.125","rgba(71,45,122,1)"],["0.166666666666667","rgba(68,58,128,1)"],["0.208333333333333","rgba(64,70,135,1)"],["0.25","rgba(60,82,138,1)"],["0.291666666666667","rgba(56,93,140,1)"],["0.333333333333333","rgba(49,104,142,1)"],["0.375","rgba(46,114,142,1)"],["0.416666666666667","rgba(42,123,142,1)"],["0.458333333333333","rgba(38,133,141,1)"],["0.5","rgba(37,144,140,1)"],["0.541666666666667","rgba(33,154,138,1)"],["0.583333333333333","rgba(39,164,133,1)"],["0.625","rgba(47,174,127,1)"],["0.666666666666667","rgba(53,183,121,1)"],["0.708333333333333","rgba(79,191,110,1)"],["0.75","rgba(98,199,98,1)"],["0.791666666666667","rgba(119,207,85,1)"],["0.833333333333333","rgba(147,214,70,1)"],["0.875","rgba(172,220,52,1)"],["0.916666666666667","rgba(199,225,42,1)"],["0.958333333333333","rgba(226,228,40,1)"],["1","rgba(253,231,37,1)"]],"showscale":false,"color":[1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,1,1,1,1,1,1,2,1,2,1,1,1,1,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,1,1,1,2,2,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,1,1,1,1,1,2],"line":{"colorbar":{"title":"","ticklen":2},"cmin":1,"cmax":2,"colorscale":[["0","rgba(68,1,84,1)"],["0.0416666666666667","rgba(70,19,97,1)"],["0.0833333333333333","rgba(72,32,111,1)"],["0.125","rgba(71,45,122,1)"],["0.166666666666667","rgba(68,58,128,1)"],["0.208333333333333","rgba(64,70,135,1)"],["0.25","rgba(60,82,138,1)"],["0.291666666666667","rgba(56,93,140,1)"],["0.333333333333333","rgba(49,104,142,1)"],["0.375","rgba(46,114,142,1)"],["0.416666666666667","rgba(42,123,142,1)"],["0.458333333333333","rgba(38,133,141,1)"],["0.5","rgba(37,144,140,1)"],["0.541666666666667","rgba(33,154,138,1)"],["0.583333333333333","rgba(39,164,133,1)"],["0.625","rgba(47,174,127,1)"],["0.666666666666667","rgba(53,183,121,1)"],["0.708333333333333","rgba(79,191,110,1)"],["0.75","rgba(98,199,98,1)"],["0.791666666666667","rgba(119,207,85,1)"],["0.833333333333333","rgba(147,214,70,1)"],["0.875","rgba(172,220,52,1)"],["0.916666666666667","rgba(199,225,42,1)"],["0.958333333333333","rgba(226,228,40,1)"],["1","rgba(253,231,37,1)"]],"showscale":false,"color":[1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,1,1,1,1,1,1,2,1,2,1,1,1,1,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,1,1,1,2,2,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,1,1,1,1,1,2]}},"frame":null},{"x":[56.5625,108.270833333333],"y":[0.166666666666667,13.7416666666667],"type":"scatter3d","mode":"markers","opacity":0,"hoverinfo":"none","showlegend":false,"marker":{"colorbar":{"title":"cluster","ticklen":2,"len":0.5,"lenmode":"fraction","y":1,"yanchor":"top"},"cmin":1,"cmax":2,"colorscale":[["0","rgba(68,1,84,1)"],["0.0416666666666667","rgba(70,19,97,1)"],["0.0833333333333333","rgba(72,32,111,1)"],["0.125","rgba(71,45,122,1)"],["0.166666666666667","rgba(68,58,128,1)"],["0.208333333333333","rgba(64,70,135,1)"],["0.25","rgba(60,82,138,1)"],["0.291666666666667","rgba(56,93,140,1)"],["0.333333333333333","rgba(49,104,142,1)"],["0.375","rgba(46,114,142,1)"],["0.416666666666667","rgba(42,123,142,1)"],["0.458333333333333","rgba(38,133,141,1)"],["0.5","rgba(37,144,140,1)"],["0.541666666666667","rgba(33,154,138,1)"],["0.583333333333333","rgba(39,164,133,1)"],["0.625","rgba(47,174,127,1)"],["0.666666666666667","rgba(53,183,121,1)"],["0.708333333333333","rgba(79,191,110,1)"],["0.75","rgba(98,199,98,1)"],["0.791666666666667","rgba(119,207,85,1)"],["0.833333333333333","rgba(147,214,70,1)"],["0.875","rgba(172,220,52,1)"],["0.916666666666667","rgba(199,225,42,1)"],["0.958333333333333","rgba(226,228,40,1)"],["1","rgba(253,231,37,1)"]],"showscale":true,"color":[1,2],"line":{"color":"rgba(255,127,14,1)"}},"z":[5.425,29.4833333333333],"frame":null}],"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.2,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+<pre class="r"><code># Interpret average silhouette width
+plot(pam1, which = 2)</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-15-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="when-determining-the-number-of-clusters-we-find-that-2-cluster-solutions-gives-us-an-sil-width-0.5-a-reasonable-cluster-structure-has-been-found.-following-clustering-we-find-that-the-average-silhouette-width-is-actually-0.27-which-is-a-weak-correlation-and-could-be-artificial." class="section level4">
+<h4>When determining the number of clusters we find that 2 cluster solutions gives us an sil width &gt;0.5; a reasonable cluster structure has been found. Following clustering we find that the average silhouette width is actually 0.27 which is a weak correlation and could be artificial.</h4>
+</div>
+</div>
+
+            
+        <hr>         <div class="related-posts">
+                <h5>Related Posts</h5>
+                
+              </div> 
+            </div>
+          </div>
+
+   <hr>  <div class="disqus">
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+
+    (function() {
+      
+      
+      if (window.location.hostname == "localhost")
+        return;
+
+      var disqus_shortname = '';
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  <a href="http://disqus.com/" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div> 
+        </div>
+      </div>
+    </div>
+
+    
+    <footer>
+  <div id="footer">
+    <div class="container">
+      <p class="text-muted">&copy; All rights reserved. Powered by <a href="https://gohugo.io/">Hugo</a> and
+      <a href="http://www.github.com/nurlansu/hugo-sustain/">sustain</a> with ♥</p>
+    </div>
+  </div>
+</footer>
+<div class="footer"></div>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="../../js/docs.min.js"></script>
+<script src="../../js/main.js"></script>
+
+<script src="../../js/ie10-viewport-bug-workaround.js"></script>
+
+
+    
+  </body>
+</html>
