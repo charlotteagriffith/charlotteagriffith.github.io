@@ -26,5 +26,5 @@ print(r.hi,hi)
 ```{R}
 cat(c(hi,py$hi))
 ```
-
+![](/post/2021-05-09-python_files/shutterstock_1375882658-e1583354582236.jpg)
 
